@@ -1,6 +1,8 @@
 import { World } from '../ecs/world';
-import { levels } from '../resources/levels';
+import { Level, levels } from '../resources/levels';
 
-export type WorldState = { paused: boolean; currentLevel: number[][] };
+type Status = 'idle' | 'running' | 'paused' | 'game-over' | 'level-clear';
 
-export const world = new World<WorldState>({ paused: true, currentLevel: levels.level1 });
+export type WorldState = { status: Status; levels: Level[]; currentLevel: number };
+
+export const world = new World<WorldState>({ status: 'idle', levels, currentLevel: 0 });
