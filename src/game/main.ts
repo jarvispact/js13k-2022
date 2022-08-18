@@ -1,10 +1,14 @@
-import { createCheckIfPlayerIsSafeSystem } from './check-if-player-is-safe-system';
 import { createRenderSystem } from './console-render-system';
-import { startupSystem } from './setup-system';
+import { inputSystem } from './input-system';
+import { levelSystem } from './level-system';
+import { spawnEntitiesSystem } from './spawn-entities-system';
+import { updateUiSystem } from './update-ui-system';
 import { world } from './world';
 
 world
-    .addStartupSystem(startupSystem)
-    .addSystem(createCheckIfPlayerIsSafeSystem(world))
+    .addStartupSystem(updateUiSystem)
+    .addStartupSystem(inputSystem)
+    .addStartupSystem(levelSystem)
+    .addStartupSystem(spawnEntitiesSystem)
     .addSystem(createRenderSystem(world))
     .run();

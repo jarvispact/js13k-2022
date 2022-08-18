@@ -1,10 +1,10 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { createComponent } from '../ecs/component';
-import { CubeKind } from '../resources/levels';
+import { Cell } from '../resources/levels';
 
 export const CubeType = 'Cube';
 
-export const createCubeComponent = (x: number, z: number, kind: CubeKind) => createComponent(CubeType, { x, z, kind });
+export const createCubeComponent = (x: number, z: number, kind: Cell) => createComponent(CubeType, { x, z, kind });
 
 export type CubeComponent = ReturnType<typeof createCubeComponent>;
 

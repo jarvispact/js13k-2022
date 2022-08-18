@@ -1,43 +1,65 @@
 import { System } from '../ecs/system';
 import { has, World } from '../ecs/world';
-import { DEAD } from '../resources/levels';
+import { Cell, DEAD } from '../resources/levels';
 import { CubeType, PlayerType } from './components';
 import { CubeEntity, PlayerEntity } from './entities';
-import { WorldState } from './world';
+import { WorldAction, WorldEvent, WorldState } from './world';
 
-export const createRenderSystem = (world: World<WorldState>): System => {
-    const { levels, currentLevel } = world.state;
+const setupRows = (rows: string[][], level: Cell[][]) => {
+    rows.length = 0;
+
+    for (let z = 0; z < level.length; z++) {
+        const column = level[z];
+        rows[z] = [];
+
+        for (let x = 0; x < column.length; x++) {
+            rows[z][x] = `[${DEAD}]`;
+        }
+    }
+};
+
+export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEvent>): System => {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     const cubeEntities = world.createQuery(has(CubeType)).entities as CubeEntity[];
     const playerEntities = world.createQuery(has(PlayerType)).entities as PlayerEntity[];
 
-    let timeToRender = Date.now() + 100;
-
     const rows: string[][] = [];
-    for (let z = 0; z < levels[currentLevel].data.length; z++) {
-        const column = levels[currentLevel].data[z];
-        rows.push([...new Array(column.length)].map(() => `[${DEAD}]`));
-    }
+    const state = world.getState();
+    setupRows(rows, state.levels[state.currentLevel].data);
+
+    world.onStateChange(({ action, newState }) => {
+        if (action.type === 'LEVEL_UP' || action.type === 'GAME_OVER') {
+            setupRows(rows, newState.levels[newState.currentLevel].data);
+        }
+    });
+
+    let timeToRender = Date.now() + 1000;
 
     return () => {
-        const player = playerEntities[0].getComponent(PlayerType);
+        const { currentLevel, status } = world.getState();
+
+        if (status === 'idle') {
+            console.log('Idle');
+            return;
+        }
+
+        if (status === 'game-over') {
+            console.log('Game Over');
+            return;
+        }
 
         if (Date.now() > timeToRender) {
-            if (world.state.status === 'game-over') {
-                console.log('Game Over');
-                return;
-            }
-
-            if (world.state.status === 'level-clear') {
-                console.log('Level clear');
-                return;
-            }
+            const player = playerEntities[0].getComponent(PlayerType);
 
             console.clear();
+            console.log(`Level: ${currentLevel}`);
 
+            // set correct entries for new level
             for (let i = 0; i < cubeEntities.length; i++) {
-                const cubeEntity = cubeEntities[i];
-                const cube = cubeEntity.getComponent('Cube');
+                const cube = cubeEntities[i].getComponent('Cube');
                 rows[cube.data.z][cube.data.x] = `[${cube.data.kind}]`;
 
                 if (player.data.z === cube.data.z && player.data.x === cube.data.x) {
@@ -46,7 +68,7 @@ export const createRenderSystem = (world: World<WorldState>): System => {
             }
 
             console.log(rows.map((r) => `${r.join('')}\n`).join(''));
-            timeToRender = Date.now() + 100;
+            timeToRender = Date.now() + 1000;
         }
     };
 };

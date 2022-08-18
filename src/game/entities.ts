@@ -1,9 +1,9 @@
 import { vec3 } from 'gl-matrix';
 import { createEntity } from '../ecs/entity';
-import { CubeKind } from '../resources/levels';
+import { Cell } from '../resources/levels';
 import { createCameraComponent, createCPlayerComponent, createCubeComponent } from './components';
 
-export const createCubeEntity = (name: string, x: number, z: number, kind: CubeKind) =>
+export const createCubeEntity = (name: string, x: number, z: number, kind: Cell) =>
     createEntity(name, [createCubeComponent(x, z, kind)]);
 
 export type CubeEntity = ReturnType<typeof createCubeEntity>;

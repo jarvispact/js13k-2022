@@ -9,10 +9,55 @@
         position: fixed;
         inset: 0;
       }
+
+      #info {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+      }
+
+      #info p {
+        margin: 0;
+      }
+
+      #game-menu {
+        position: fixed;
+        inset: 0;
+        top: -110%;
+        transition: opacity 0.4s ease, top 0.8s ease;
+      }
+
+      #game-menu[open] {
+        opacity: 1;
+        top: 0px;
+      }
+
+      #game-menu:not([open]) {
+        display: block;
+        opacity: 0;
+      }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="info">
+      <p id="level">Level: 1</p>
+      <p id="score">Score: 0</p>
+    </div>
+    <dialog id="game-menu" open>
+      <form method="dialog">
+        <p>
+          Welcome to my game
+        </p>
+        <ul>
+          <li>use the arrow keys to move</li>
+          <li>use the escape key to toggle this menu</li>
+        </ul>
+        <div>
+          <button id="start">Start Game</button>
+        </div>
+      </form>
+    </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
