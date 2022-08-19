@@ -59,7 +59,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         if (Date.now() > timeToRender) {
             const player = playerEntities[0].getComponent(PlayerType);
 
-            // console.clear();
+            console.clear();
             console.log(`Level: ${currentLevel}`);
 
             // set correct entries for new level

@@ -21,7 +21,6 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
             world.dispatch({ type: 'GAME_OVER' });
         } else if (kind === GOAL) {
             const { levels, currentLevel } = world.getState();
-            console.log('complete', levels.length, currentLevel);
             if (currentLevel === levels.length - 1) {
                 world.dispatch({ type: 'COMPLETE' });
             } else {
