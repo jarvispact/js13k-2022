@@ -1,8 +1,8 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
 import { System } from '../ecs/system';
 import { has, World } from '../ecs/world';
-import { CubeType, PlayerType } from '../game/components';
-import { CameraEntity, CubeEntity, PlayerEntity } from '../game/entities';
+import { CubeType } from '../game/components';
+import { CameraEntity, CubeEntity } from '../game/entities';
 import { WorldAction, WorldEvent, WorldState } from '../game/world';
 import { cube } from '../resources/cube';
 import { createMap } from '../utils/create-map';
@@ -123,7 +123,6 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     const transformUbo = new UBO(gl, 'TransformUniforms', 1, transformUboConfig).bindToShaderProgram(shaderProgram);
 
     const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;
-    const playerEntities = world.createQuery<PlayerEntity>(has(PlayerType)).entities;
 
     const cubeRenderCache: CubeCacheEntry[] = [];
     const cachedCubeEntityMap: Record<string, number> = {};
