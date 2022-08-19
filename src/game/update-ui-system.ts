@@ -38,7 +38,7 @@ export const updateUiSystem: StartupSystem<World<WorldState, WorldAction, WorldE
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'INCREMENT_SCORE') {
             ui.setScore(newState.score);
-        } else if (action.type === 'GAME_OVER') {
+        } else if (action.type === 'GAME_OVER' || action.type === 'COMPLETE') {
             ui.toggleGameMenu();
         } else if (action.type === 'LEVEL_UP') {
             ui.setLevel(newState.currentLevel);

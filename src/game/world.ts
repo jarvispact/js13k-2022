@@ -2,7 +2,7 @@ import { World } from '../ecs/world';
 import { Level, levels } from '../resources/levels';
 import { PlayerEntity } from './entities';
 
-type Status = 'idle' | 'running' | 'game-over';
+type Status = 'idle' | 'running' | 'game-over' | 'completed';
 
 export type WorldState = { status: Status; levels: Level[]; currentLevel: number; score: number };
 
@@ -10,7 +10,8 @@ export type WorldAction =
     | { type: 'START' }
     | { type: 'GAME_OVER' }
     | { type: 'LEVEL_UP' }
-    | { type: 'INCREMENT_SCORE' };
+    | { type: 'INCREMENT_SCORE' }
+    | { type: 'COMPLETE' };
 
 export type WorldEvent = { type: 'PLAYER_SPAWNED'; payload: PlayerEntity };
 
@@ -26,6 +27,8 @@ export const world = new World<WorldState, WorldAction, WorldEvent>({
                 return { ...state, currentLevel: state.currentLevel + 1 };
             case 'INCREMENT_SCORE':
                 return { ...state, score: state.score + 1 };
+            case 'COMPLETE':
+                return { ...state, status: 'completed' };
             default:
                 return state;
         }

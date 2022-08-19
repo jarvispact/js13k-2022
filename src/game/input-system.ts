@@ -20,7 +20,13 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
         } else if (kind === DEAD) {
             world.dispatch({ type: 'GAME_OVER' });
         } else if (kind === GOAL) {
-            world.dispatch({ type: 'LEVEL_UP' });
+            const { levels, currentLevel } = world.getState();
+            console.log('complete', levels.length, currentLevel);
+            if (currentLevel === levels.length - 1) {
+                world.dispatch({ type: 'COMPLETE' });
+            } else {
+                world.dispatch({ type: 'LEVEL_UP' });
+            }
         }
     };
 
@@ -58,8 +64,8 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
         if (action.type === 'START' || action.type == 'LEVEL_UP' || action.type === 'GAME_OVER') {
             const { levels, currentLevel } = newState;
             // assuming that all columns within 1 level have the same size
-            boundaries.x = { min: 0, max: levels[currentLevel].data[0].length - 1 };
-            boundaries.z = { min: 0, max: levels[currentLevel].data.length - 1 };
+            boundaries.x = { min: 0, max: levels[currentLevel][0].length - 1 };
+            boundaries.z = { min: 0, max: levels[currentLevel].length - 1 };
         }
     });
 
@@ -69,7 +75,7 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
                 if (!isActionKey(e.key)) return;
                 const { levels, currentLevel } = world.getState();
                 const playerComponent = event.payload.getComponent('Player');
-                actionMap[e.key](playerComponent, boundaries, levels[currentLevel].data);
+                actionMap[e.key](playerComponent, boundaries, levels[currentLevel]);
             });
         }
     });

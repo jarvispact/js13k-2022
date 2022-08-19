@@ -9,8 +9,8 @@ export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, W
 
     const playerStart: { x: number; z: number } = { x: 0, z: 0 };
 
-    for (let z = 0; z < levels[currentLevel].data.length; z++) {
-        const column = levels[currentLevel].data[z];
+    for (let z = 0; z < levels[currentLevel].length; z++) {
+        const column = levels[currentLevel][z];
         for (let x = 0; x < column.length; x++) {
             const kind = column[x] as Cell;
             world.spawnEntity(createCubeEntity(`Cube-${x}-${z}`, x, z, kind));
@@ -27,8 +27,8 @@ export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, W
 
     world.onStateChange(({ action, newState }) => {
         if (action.type == 'LEVEL_UP' || action.type === 'GAME_OVER') {
-            for (let z = 0; z < newState.levels[newState.currentLevel].data.length; z++) {
-                const column = newState.levels[newState.currentLevel].data[z];
+            for (let z = 0; z < newState.levels[newState.currentLevel].length; z++) {
+                const column = newState.levels[newState.currentLevel][z];
                 for (let x = 0; x < column.length; x++) {
                     const kind = column[x] as Cell;
                     if (kind === PLAY) {

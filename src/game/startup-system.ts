@@ -60,14 +60,14 @@ export const startupSystem: StartupSystem<World<WorldState, WorldAction>> = (wor
     // TODO: need to update boundaries when level change
     const boundaries: Boundaries = {
         // assuming that all columns have the same size within one level
-        x: { min: 0, max: levels[currentLevel].data[0].length - 1 },
-        z: { min: 0, max: levels[currentLevel].data.length - 1 },
+        x: { min: 0, max: levels[currentLevel][0].length - 1 },
+        z: { min: 0, max: levels[currentLevel].length - 1 },
     };
 
     const playerStart: { x: number; z: number } = { x: 0, z: 0 };
 
-    for (let z = 0; z < levels[currentLevel].data.length; z++) {
-        const column = levels[currentLevel].data[z];
+    for (let z = 0; z < levels[currentLevel].length; z++) {
+        const column = levels[currentLevel][z];
         for (let x = 0; x < column.length; x++) {
             const kind = column[x] as Cell;
             world.spawnEntity(createCubeEntity(`Cube-${x}-${z}`, x, z, kind));
@@ -82,7 +82,7 @@ export const startupSystem: StartupSystem<World<WorldState, WorldAction>> = (wor
 
     document.addEventListener('keyup', (event) => {
         if (!isActionKey(event.key)) return;
-        const currentLevelData = levels[currentLevel].data;
+        const currentLevelData = levels[currentLevel];
         const playerComponent = playerEntity.getComponent('Player');
         actionMap[event.key](playerComponent, boundaries, currentLevelData);
     });

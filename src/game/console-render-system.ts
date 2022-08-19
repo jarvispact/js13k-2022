@@ -28,11 +28,11 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
 
     const rows: string[][] = [];
     const state = world.getState();
-    setupRows(rows, state.levels[state.currentLevel].data);
+    setupRows(rows, state.levels[state.currentLevel]);
 
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'LEVEL_UP' || action.type === 'GAME_OVER') {
-            setupRows(rows, newState.levels[newState.currentLevel].data);
+            setupRows(rows, newState.levels[newState.currentLevel]);
         }
     });
 
@@ -51,10 +51,15 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             return;
         }
 
+        if (status === 'completed') {
+            console.log('Complete!');
+            return;
+        }
+
         if (Date.now() > timeToRender) {
             const player = playerEntities[0].getComponent(PlayerType);
 
-            console.clear();
+            // console.clear();
             console.log(`Level: ${currentLevel}`);
 
             // set correct entries for new level

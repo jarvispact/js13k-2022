@@ -4,6 +4,7 @@ export const GOAL = 2;
 export const PLAY = 3;
 
 export type Cell = typeof DEAD | typeof SAFE | typeof GOAL | typeof PLAY;
+export type Level = Cell[][];
 
 const level1: Cell[][] = [
     [SAFE, GOAL, DEAD],
@@ -29,8 +30,4 @@ const level3: Cell[][] = [
     [DEAD, PLAY, DEAD],
 ];
 
-export type Level = {
-    data: Cell[][];
-};
-
-export const levels: Level[] = [{ data: level1 }, { data: level2 }, { data: level3 }];
+export const levels: Level[] = [level1, level2, level3];

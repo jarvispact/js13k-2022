@@ -8,10 +8,10 @@ export const levelSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'LEVEL_UP' || action.type === 'GAME_OVER') {
             const player = world.getEntity<PlayerEntity>('Player').getComponent('Player');
-            const levelData = newState.levels[newState.currentLevel].data;
+            const level = newState.levels[newState.currentLevel];
 
-            for (let z = 0; z < levelData.length; z++) {
-                const column = levelData[z];
+            for (let z = 0; z < level.length; z++) {
+                const column = level[z];
 
                 for (let x = 0; x < column.length; x++) {
                     const cell = column[x];
