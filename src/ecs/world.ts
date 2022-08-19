@@ -25,16 +25,16 @@ export const or =
     (entity: Entity) =>
         queries.some((predicate) => predicate(entity));
 
-class Query {
+class Query<E extends Entity> {
     predicate: (entity: Entity) => boolean;
-    entities: Entity[] = [];
+    entities: E[] = [];
 
     constructor(predicate: (entity: Entity) => boolean) {
         this.predicate = predicate;
     }
 
     addEntity(entity: Entity) {
-        this.entities.push(entity);
+        this.entities.push(entity as E);
     }
 
     removeEntity(entity: Entity) {
@@ -72,7 +72,7 @@ export class World<State = any, Action = any, Event = any> {
     private eventSubsribers: EventSubsriber<Event>[] = [];
 
     private getDelta = createGetDelta();
-    private queries: Query[] = [];
+    private queries: Query<Entity>[] = [];
     private entities: Record<string, Entity | undefined> = {};
     private systems: System[] = [];
     private startupSystems: StartupSystem[] = [];
@@ -120,8 +120,8 @@ export class World<State = any, Action = any, Event = any> {
         }
     }
 
-    createQuery(predicate: QueryPredicate) {
-        const query = new Query(predicate);
+    createQuery<E extends Entity>(predicate: QueryPredicate) {
+        const query = new Query<E>(predicate);
         this.queries.push(query);
         return query;
     }
@@ -152,7 +152,7 @@ export class World<State = any, Action = any, Event = any> {
         return this;
     }
 
-    getEntity<E extends Entity>(name: string) {
+    getEntity<E extends Entity>(name: E['name']) {
         return this.entities[name] as E;
     }
 

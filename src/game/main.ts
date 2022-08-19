@@ -1,4 +1,4 @@
-import { createRenderSystem } from './console-render-system';
+import { createRenderSystem } from '../webgl2/render-system';
 import { inputSystem } from './input-system';
 import { levelSystem } from './level-system';
 import { spawnEntitiesSystem } from './spawn-entities-system';
