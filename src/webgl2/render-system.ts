@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 import { System } from '../ecs/system';
 import { has, World } from '../ecs/world';
 import { CubeType } from '../game/components';
@@ -18,54 +18,40 @@ import {
 
 const vs = `
 #version 300 es
- 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-
-struct Camera {
-    vec3 translation;
-    mat4 viewMatrix;
-    mat4 projectionMatrix;
+struct C {
+    mat4 vm;
+    mat4 pm;
 };
-
-uniform CameraUniforms {
-    Camera camera;
+uniform SU {
+    C c;
 };
-
-struct Transform {
-    mat4 modelMatrix;
+struct T {
+    mat4 mm;
 };
-
-uniform TransformUniforms {
-    Transform transform;
+uniform EU {
+    T t;
 };
-
-out vec3 vNormal;
- 
+out vec3 vN;
 void main() {
-    vNormal = normal;
-    vec4 worldPos = transform.modelMatrix * vec4(position, 1.0);
-    gl_Position = camera.projectionMatrix * camera.viewMatrix * worldPos;
+    vN = normal;
+    vec4 worldPos = t.mm * vec4(position, 1.0);
+    gl_Position = c.pm * c.vm * worldPos;
 }
 `.trim();
 
 const fs = `
 #version 300 es
-
 precision highp float;
-
-in vec3 vNormal;
-
-vec3 lightDirection = vec3(0.5, 1.0, 3.0);
+in vec3 vN;
 vec3 lightDiffuse = vec3(0.8, 0.8, 0.8);
-
 out vec4 outColor;
- 
 void main() {
     vec3 texel = vec3(1.0, 1.0, 1.0);
     vec3 ambient = texel * 0.05;
-    vec3 direction = normalize(lightDirection);
-    vec3 normal = normalize(vNormal);
+    vec3 direction = normalize(vec3(0.5, 1.0, 3.0));
+    vec3 normal = normalize(vN);
     float diff = max(dot(normal, direction), 0.0);
     vec3 diffuse = lightDiffuse * diff * texel;
     outColor = vec4(ambient + diffuse, 1.0);
@@ -73,13 +59,12 @@ void main() {
 `.trim();
 
 const cameraUboConfig = {
-    'camera.translation': vec3.create(),
-    'camera.viewMatrix': mat4.create(),
-    'camera.projectionMatrix': mat4.create(),
+    'c.vm': mat4.create(),
+    'c.pm': mat4.create(),
 };
 
 const transformUboConfig = {
-    'transform.modelMatrix': mat4.create(),
+    't.mm': mat4.create(),
 };
 
 type CacheEntry<T> = { entity: T; update: () => void; cleanup: () => void };
@@ -98,8 +83,8 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     const shaderProgram = createWebgl2Program(gl, vertexShader, fragmentShader);
     gl.useProgram(shaderProgram);
 
-    const cameraUbo = new UBO(gl, 'CameraUniforms', 0, cameraUboConfig).bindToShaderProgram(shaderProgram);
-    const transformUbo = new UBO(gl, 'TransformUniforms', 1, transformUboConfig).bindToShaderProgram(shaderProgram);
+    const cameraUbo = new UBO(gl, 'SU', 0, cameraUboConfig).bindToShaderProgram(shaderProgram);
+    const transformUbo = new UBO(gl, 'EU', 1, transformUboConfig).bindToShaderProgram(shaderProgram);
 
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
@@ -117,11 +102,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             camera.data.far,
         );
 
-        cameraUbo
-            .setVec3('camera.translation', camera.data.position)
-            .setMat4('camera.viewMatrix', camera.data.viewMatrix)
-            .setMat4('camera.projectionMatrix', camera.data.projectionMatrix)
-            .update();
+        cameraUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
     });
 
     const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;
@@ -146,7 +127,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
-            transformUbo.setMat4('transform.modelMatrix', transformComponent.modelMatrix).update();
+            transformUbo.setMat4('t.mm', transformComponent.modelMatrix).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
             gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
@@ -197,7 +178,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
-            transformUbo.setMat4('transform.modelMatrix', transformComponent.modelMatrix).update();
+            transformUbo.setMat4('t.mm', transformComponent.modelMatrix).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
             gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
@@ -230,11 +211,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // TODO: cache operations
-        cameraUbo
-            .setVec3('camera.translation', camera.data.position)
-            .setMat4('camera.viewMatrix', camera.data.viewMatrix)
-            .setMat4('camera.projectionMatrix', camera.data.projectionMatrix)
-            .update();
+        cameraUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
 
         for (let i = 0; i < cubeEntities.length; i++) {
             const cubeEntity = cubeEntities[i];
