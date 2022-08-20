@@ -117,7 +117,11 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             camera.data.far,
         );
 
-        cameraUbo.setMat4('camera.projectionMatrix', camera.data.projectionMatrix).update();
+        cameraUbo
+            .setVec3('camera.translation', camera.data.position)
+            .setMat4('camera.viewMatrix', camera.data.viewMatrix)
+            .setMat4('camera.projectionMatrix', camera.data.projectionMatrix)
+            .update();
     });
 
     const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;

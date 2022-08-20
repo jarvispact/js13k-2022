@@ -17,7 +17,7 @@ type Boundaries = { x: Boundary; z: Boundary };
 
 const updatePlayerTransform = (t: TransformComponent, playerComponent: PlayerComponent, level: Level) => {
     const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
-    // assuming that all columns within 1 level have the same size
+
     const mapXForZ = (z: number) =>
         createMap(0, level[z].length - 1, -((level[z].length - 1) / 2), (level[z].length - 1) / 2);
 
@@ -100,7 +100,8 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
         if (event.type === 'PLAYER_SPAWNED') {
             document.addEventListener('keyup', (e) => {
                 if (!isActionKey(e.key)) return;
-                const { levels, currentLevel } = world.getState();
+                const { levels, currentLevel, status } = world.getState();
+                if (status !== 'running') return;
                 actionMap[e.key](event.payload, boundaries, levels[currentLevel]);
             });
         }

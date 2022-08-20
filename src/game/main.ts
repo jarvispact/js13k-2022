@@ -12,5 +12,4 @@ world
     .addStartupSystem(levelSystem)
     .addStartupSystem(spawnEntitiesSystem)
     .addSystem(createRenderSystem(world))
-    // .addSystem(createRenderSystem(world))
     .run();
