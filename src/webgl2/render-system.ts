@@ -21,23 +21,11 @@ const vs = `
 #version 300 es
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-struct C {
-    mat4 vm;
-    mat4 pm;
-};
-uniform SU {
-    C c;
-};
-struct T {
-    mat4 mm;
-};
-struct M {
-    vec3 color;
-};
-uniform EU {
-    T t;
-    M m;
-};
+struct C { mat4 vm; mat4 pm; };
+uniform SU { C c; };
+struct T { mat4 mm; };
+struct M { vec3 color; };
+uniform EU { T t; M m; };
 out vec3 vN;
 void main() {
     vN = normal;
@@ -49,16 +37,9 @@ void main() {
 const fs = `
 #version 300 es
 precision highp float;
-struct T {
-    mat4 mm;
-};
-struct M {
-    vec3 color;
-};
-uniform EU {
-    T t;
-    M m;
-};
+struct T { mat4 mm; };
+struct M { vec3 color; };
+uniform EU { T t; M m; };
 in vec3 vN;
 vec3 lightDiffuse = vec3(0.8, 0.8, 0.8);
 out vec4 outColor;
@@ -72,12 +53,12 @@ void main() {
 }
 `.trim();
 
-const cameraUboConfig = {
+const sceneUboConfig = {
     'c.vm': mat4.create(),
     'c.pm': mat4.create(),
 };
 
-const transformUboConfig = {
+const entityUboConfig = {
     't.mm': mat4.create(),
     'm.color': vec3.create(),
 };
@@ -98,8 +79,8 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     const shaderProgram = createWebgl2Program(gl, vertexShader, fragmentShader);
     gl.useProgram(shaderProgram);
 
-    const cameraUbo = new UBO(gl, 'SU', 0, cameraUboConfig).bindToShaderProgram(shaderProgram);
-    const transformUbo = new UBO(gl, 'EU', 1, transformUboConfig).bindToShaderProgram(shaderProgram);
+    const sceneUbo = new UBO(gl, 'SU', 0, sceneUboConfig).bindToShaderProgram(shaderProgram);
+    const entityUbo = new UBO(gl, 'EU', 1, entityUboConfig).bindToShaderProgram(shaderProgram);
 
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
@@ -117,7 +98,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             camera.data.far,
         );
 
-        cameraUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
+        sceneUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
     });
 
     const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;
@@ -152,7 +133,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
-            transformUbo
+            entityUbo
                 .setMat4('t.mm', transformComponent.modelMatrix)
                 .setVec3('m.color', colorForCell[cubeComponent.kind])
                 .update();
@@ -180,7 +161,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     };
 
     window.addEventListener('unload', () => {
-        cameraUbo.cleanup();
+        sceneUbo.cleanup();
 
         for (let i = 0; i < cubeRenderCache.length; i++) {
             const cachedEntry = cubeRenderCache[i];
@@ -206,7 +187,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
-            transformUbo.setMat4('t.mm', transformComponent.modelMatrix).setVec3('m.color', playerColor).update();
+            entityUbo.setMat4('t.mm', transformComponent.modelMatrix).setVec3('m.color', playerColor).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
             gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
@@ -239,7 +220,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // TODO: cache operations
-        cameraUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
+        sceneUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
 
         for (let i = 0; i < cubeEntities.length; i++) {
             const cubeEntity = cubeEntities[i];
@@ -254,7 +235,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         }
 
         return () => {
-            cameraUbo.cleanup();
+            sceneUbo.cleanup();
 
             for (let i = 0; i < cubeRenderCache.length; i++) {
                 const cachedEntry = cubeRenderCache[i];
