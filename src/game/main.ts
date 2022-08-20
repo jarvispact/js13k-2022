@@ -1,4 +1,5 @@
 import { createRenderSystem } from '../webgl2/render-system';
+// import { createRenderSystem } from './console-render-system';
 import { inputSystem } from './input-system';
 import { levelSystem } from './level-system';
 import { spawnEntitiesSystem } from './spawn-entities-system';
@@ -11,4 +12,5 @@ world
     .addStartupSystem(levelSystem)
     .addStartupSystem(spawnEntitiesSystem)
     .addSystem(createRenderSystem(world))
+    // .addSystem(createRenderSystem(world))
     .run();

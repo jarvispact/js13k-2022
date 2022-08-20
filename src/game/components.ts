@@ -1,6 +1,25 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { createComponent } from '../ecs/component';
 import { Cell } from '../resources/levels';
+
+export const TransformType = 'Transform';
+
+export const createTransformComponent = (position: vec3, rotation: quat, scale: vec3) => {
+    const data = {
+        position,
+        rotation,
+        scale,
+        modelMatrix: mat4.fromValues(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
+    };
+
+    mat4.fromRotationTranslationScale(data.modelMatrix, data.rotation, data.position, data.scale);
+
+    return createComponent(TransformType, data);
+};
+
+export type TransformComponent = ReturnType<typeof createTransformComponent>;
+
+// ===
 
 export const CubeType = 'Cube';
 
@@ -12,9 +31,9 @@ export type CubeComponent = ReturnType<typeof createCubeComponent>;
 
 export const PlayerType = 'Player';
 
-export const createCPlayerComponent = (x: number, z: number) => createComponent(PlayerType, { x, z });
+export const createPlayerComponent = (x: number, z: number) => createComponent(PlayerType, { x, z });
 
-export type PlayerComponent = ReturnType<typeof createCPlayerComponent>;
+export type PlayerComponent = ReturnType<typeof createPlayerComponent>;
 
 // ===
 

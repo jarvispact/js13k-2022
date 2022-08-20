@@ -1,7 +1,10 @@
+import { mat4 } from 'gl-matrix';
 import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
-import { Cell, DEAD, GOAL, SAFE } from '../resources/levels';
-import { PlayerComponent } from './components';
+import { Cell, DEAD, GOAL, Level, SAFE } from '../resources/levels';
+import { createMap } from '../utils/create-map';
+import { PlayerComponent, TransformComponent } from './components';
+import { PlayerEntity } from './entities';
 import { WorldAction, WorldEvent, WorldState } from './world';
 
 const actionKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'] as const;
@@ -11,6 +14,19 @@ const isActionKey = (key: unknown): key is Key => actionKeys.includes(key as Key
 
 type Boundary = { min: number; max: number };
 type Boundaries = { x: Boundary; z: Boundary };
+
+const updatePlayerTransform = (t: TransformComponent, playerComponent: PlayerComponent, level: Level) => {
+    const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
+    // assuming that all columns within 1 level have the same size
+    const mapXForZ = (z: number) =>
+        createMap(0, level[z].length - 1, -((level[z].length - 1) / 2), (level[z].length - 1) / 2);
+
+    t.data.position[0] = mapXForZ(playerComponent.data.z)(playerComponent.data.x) * 2.35;
+    t.data.position[1] = 2.35;
+    t.data.position[2] = mapZ(playerComponent.data.z) * 2.35;
+
+    mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);
+};
 
 export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
     const updateWorld = (playerComponent: PlayerComponent, level: Cell[][]) => {
@@ -30,26 +46,38 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
     };
 
     const actionMap: {
-        [K in Key]: (playerComponent: PlayerComponent, boundaries: Boundaries, level: Cell[][]) => void;
+        [K in Key]: (playerEntity: PlayerEntity, boundaries: Boundaries, level: Level) => void;
     } = {
-        ArrowDown: (playerComponent, boundaries, level) => {
+        ArrowDown: (playerEntity, boundaries, level) => {
+            const playerComponent = playerEntity.getComponent('Player');
+            const transformComponent = playerEntity.getComponent('Transform');
             if (playerComponent.data.z >= boundaries.z.max) return;
             playerComponent.data.z += 1;
+            updatePlayerTransform(transformComponent, playerComponent, level);
             updateWorld(playerComponent, level);
         },
-        ArrowUp: (playerComponent, boundaries, level) => {
+        ArrowUp: (playerEntity, boundaries, level) => {
+            const playerComponent = playerEntity.getComponent('Player');
+            const transformComponent = playerEntity.getComponent('Transform');
             if (playerComponent.data.z <= boundaries.z.min) return;
             playerComponent.data.z -= 1;
+            updatePlayerTransform(transformComponent, playerComponent, level);
             updateWorld(playerComponent, level);
         },
-        ArrowLeft: (playerComponent, boundaries, level) => {
+        ArrowLeft: (playerEntity, boundaries, level) => {
+            const playerComponent = playerEntity.getComponent('Player');
+            const transformComponent = playerEntity.getComponent('Transform');
             if (playerComponent.data.x <= boundaries.x.min) return;
             playerComponent.data.x -= 1;
+            updatePlayerTransform(transformComponent, playerComponent, level);
             updateWorld(playerComponent, level);
         },
-        ArrowRight: (playerComponent, boundaries, level) => {
+        ArrowRight: (playerEntity, boundaries, level) => {
+            const playerComponent = playerEntity.getComponent('Player');
+            const transformComponent = playerEntity.getComponent('Transform');
             if (playerComponent.data.x >= boundaries.x.max) return;
             playerComponent.data.x += 1;
+            updatePlayerTransform(transformComponent, playerComponent, level);
             updateWorld(playerComponent, level);
         },
     };
@@ -73,8 +101,7 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
             document.addEventListener('keyup', (e) => {
                 if (!isActionKey(e.key)) return;
                 const { levels, currentLevel } = world.getState();
-                const playerComponent = event.payload.getComponent('Player');
-                actionMap[e.key](playerComponent, boundaries, levels[currentLevel]);
+                actionMap[e.key](event.payload, boundaries, levels[currentLevel]);
             });
         }
     });

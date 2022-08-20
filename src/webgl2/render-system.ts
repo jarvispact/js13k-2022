@@ -1,11 +1,10 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import { System } from '../ecs/system';
 import { has, World } from '../ecs/world';
 import { CubeType } from '../game/components';
-import { CameraEntity, CubeEntity } from '../game/entities';
+import { CameraEntity, CubeEntity, PlayerEntity } from '../game/entities';
 import { WorldAction, WorldEvent, WorldState } from '../game/world';
 import { cube } from '../resources/cube';
-import { createMap } from '../utils/create-map';
 import {
     createWebgl2ArrayBuffer,
     createWebgl2ElementArrayBuffer,
@@ -64,7 +63,7 @@ out vec4 outColor;
  
 void main() {
     vec3 texel = vec3(1.0, 1.0, 1.0);
-    vec3 ambient = texel * 0.01;
+    vec3 ambient = texel * 0.05;
     vec3 direction = normalize(lightDirection);
     vec3 normal = normalize(vNormal);
     float diff = max(dot(normal, direction), 0.0);
@@ -83,32 +82,12 @@ const transformUboConfig = {
     'transform.modelMatrix': mat4.create(),
 };
 
-type CubeCacheEntry = { entity: CubeEntity; update: () => void; cleanup: () => void };
-
-type PositionMappers = {
-    mapXForZ: (z: number) => (input: number) => number;
-    mapZ: (input: number) => number;
-};
+type CacheEntry<T> = { entity: T; update: () => void; cleanup: () => void };
 
 export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEvent>): System => {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
-    const mappers: PositionMappers = {
-        mapXForZ: () => (input) => input,
-        mapZ: (input) => input,
-    };
-
-    world.onStateChange(({ action, newState }) => {
-        if (action.type === 'START' || action.type == 'LEVEL_UP' || action.type === 'GAME_OVER') {
-            const { levels, currentLevel } = newState;
-            const level = levels[currentLevel];
-            mappers.mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
-            mappers.mapXForZ = (z) =>
-                createMap(0, level[z].length - 1, -((level[z].length - 1) / 2), (level[z].length - 1) / 2);
-        }
-    });
 
     const gl = getWebgl2Context(canvas);
     gl.clearColor(0, 0, 0, 1);
@@ -122,21 +101,35 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     const cameraUbo = new UBO(gl, 'CameraUniforms', 0, cameraUboConfig).bindToShaderProgram(shaderProgram);
     const transformUbo = new UBO(gl, 'TransformUniforms', 1, transformUboConfig).bindToShaderProgram(shaderProgram);
 
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
+        const camera = world.getEntity<CameraEntity>('Camera').getComponent('Camera');
+        camera.data.aspect = window.innerWidth / window.innerHeight;
+
+        mat4.perspective(
+            camera.data.projectionMatrix,
+            camera.data.fov,
+            camera.data.aspect,
+            camera.data.near,
+            camera.data.far,
+        );
+
+        cameraUbo.setMat4('camera.projectionMatrix', camera.data.projectionMatrix).update();
+    });
+
     const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;
 
-    const cubeRenderCache: CubeCacheEntry[] = [];
+    const cubeRenderCache: CacheEntry<CubeEntity>[] = [];
     const cachedCubeEntityMap: Record<string, number> = {};
 
-    const modelMatrix = mat4.create();
-    const rotation = quat.fromValues(0, 0, 0, 1);
-    const translation = vec3.fromValues(0, 0, 0);
-    const scale = vec3.fromValues(1, 1, 1);
-
-    const cacheCubeEntity = (entity: CubeEntity): CubeCacheEntry => {
+    const cacheCubeEntity = (entity: CubeEntity): CacheEntry<CubeEntity> => {
         const idx = cachedCubeEntityMap[entity.name];
         if (idx !== undefined) return cubeRenderCache[cachedCubeEntityMap[entity.name]];
 
-        const cubeComponent = entity.getComponent('Cube').data;
+        const transformComponent = entity.getComponent('Transform').data;
 
         const vao = createWebgl2VertexArray(gl);
 
@@ -149,15 +142,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
-            vec3.set(
-                translation,
-                mappers.mapXForZ(cubeComponent.z)(cubeComponent.x) * 2.5,
-                0,
-                mappers.mapZ(cubeComponent.z) * 2.5,
-            );
-
-            mat4.fromRotationTranslationScale(modelMatrix, rotation, translation, scale);
-            transformUbo.setMat4('transform.modelMatrix', modelMatrix).update();
+            transformUbo.setMat4('transform.modelMatrix', transformComponent.modelMatrix).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
             gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
@@ -170,7 +155,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             gl.deleteVertexArray(vao);
         };
 
-        const cachedEntry: CubeCacheEntry = {
+        const cachedEntry: CacheEntry<CubeEntity> = {
             entity,
             update,
             cleanup,
@@ -181,7 +166,61 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         return cachedEntry;
     };
 
+    window.addEventListener('unload', () => {
+        cameraUbo.cleanup();
+
+        for (let i = 0; i < cubeRenderCache.length; i++) {
+            const cachedEntry = cubeRenderCache[i];
+            cachedEntry.cleanup();
+        }
+    });
+
+    const cachedPlayer: CacheEntry<PlayerEntity> | null = null;
+
+    const cachePlayerEntity = (entity: PlayerEntity): CacheEntry<PlayerEntity> => {
+        if (cachedPlayer) return cachedPlayer;
+
+        const transformComponent = entity.getComponent('Transform').data;
+
+        const vao = createWebgl2VertexArray(gl);
+
+        const positionsBuffer = createWebgl2ArrayBuffer(gl, cube.positions);
+        setupWebgl2VertexAttribPointer(gl, 0, 3);
+
+        const normalsBuffer = createWebgl2ArrayBuffer(gl, cube.normals);
+        setupWebgl2VertexAttribPointer(gl, 1, 3);
+
+        const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
+
+        const update = () => {
+            transformUbo.setMat4('transform.modelMatrix', transformComponent.modelMatrix).update();
+            gl.bindVertexArray(vao);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+            gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
+        };
+
+        const cleanup = () => {
+            gl.deleteBuffer(positionsBuffer);
+            gl.deleteBuffer(normalsBuffer);
+            gl.deleteBuffer(indicesBuffer);
+            gl.deleteVertexArray(vao);
+        };
+
+        return {
+            entity,
+            update,
+            cleanup,
+        };
+    };
+
     return () => {
+        const status = world.getState().status;
+
+        if (status === 'idle' || status === 'completed' || status === 'game-over') {
+            console.log(status);
+            return;
+        }
+
         const camera = world.getEntity<CameraEntity>('Camera').getComponent('Camera');
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -199,12 +238,24 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             cachedEntry.update();
         }
 
+        const player = world.getEntity<PlayerEntity>('Player');
+        if (player) {
+            const cachedPlayer = cachePlayerEntity(player);
+            cachedPlayer.update();
+        }
+
         return () => {
             cameraUbo.cleanup();
 
             for (let i = 0; i < cubeRenderCache.length; i++) {
                 const cachedEntry = cubeRenderCache[i];
                 cachedEntry.cleanup();
+            }
+
+            const player = world.getEntity<PlayerEntity>('Player');
+            if (player) {
+                const cachedPlayer = cachePlayerEntity(player);
+                cachedPlayer.cleanup();
             }
         };
     };
