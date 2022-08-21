@@ -46,7 +46,6 @@ export const levelSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
                         player.data.x = x;
                         player.data.z = z;
                         transform.data.position[0] = mapX(x) * 2.35;
-                        transform.data.position[1] = 2.35;
                         transform.data.position[2] = mapZ(z) * 2.35;
 
                         mat4.fromRotationTranslationScale(

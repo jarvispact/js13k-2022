@@ -21,8 +21,9 @@ const updatePlayerTransform = (t: TransformComponent, playerComponent: PlayerCom
     const mapXForZ = (z: number) =>
         createMap(0, level[z].length - 1, -((level[z].length - 1) / 2), (level[z].length - 1) / 2);
 
+    console.log(t.data.position);
+
     t.data.position[0] = mapXForZ(playerComponent.data.z)(playerComponent.data.x) * 2.35;
-    t.data.position[1] = 2.35;
     t.data.position[2] = mapZ(playerComponent.data.z) * 2.35;
 
     mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);

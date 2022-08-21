@@ -44,7 +44,7 @@ export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, W
                 playerStart.x = x;
                 playerStart.z = z;
                 playerPosition[0] = mapX(x) * 2.35;
-                playerPosition[1] = 2.35;
+                playerPosition[1] = 1.2;
                 playerPosition[2] = mapZ(z) * 2.35;
             }
         }
