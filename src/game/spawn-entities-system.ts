@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { vec3 } from 'gl-matrix';
 import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
 import { Cell, PLAY } from '../resources/levels';
@@ -7,9 +7,6 @@ import { createCameraEntity, createCubeEntity, createPlayerEntity } from './enti
 import { WorldAction, WorldEvent, WorldState } from './world';
 
 export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
-    const { levels, currentLevel } = world.getState();
-    const level = levels[currentLevel];
-
     world.spawnEntity(
         createCameraEntity(
             vec3.fromValues(0, 10, 10),
@@ -18,44 +15,61 @@ export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, W
         ),
     );
 
-    const playerStart = { x: 0, z: 0 };
-    const playerPosition = vec3.create();
+    world.onStateChange(({ action, newState }) => {
+        if (action.type === 'START') {
+            const level = newState.levels[newState.currentLevel];
 
-    const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
+            const playerStart = { x: 0, z: 0 };
+            const playerPosition = vec3.create();
+            const playerTarget = vec3.create();
 
-    for (let z = 0; z < level.length; z++) {
-        const column = level[z];
-        const mapX = createMap(0, column.length - 1, -((column.length - 1) / 2), (column.length - 1) / 2);
+            const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
 
-        for (let x = 0; x < column.length; x++) {
-            const kind = column[x] as Cell;
-            const cubeEntity = createCubeEntity(`Cube-${x}-${z}`, x, z, kind);
-            const t = cubeEntity.getComponent('Transform');
+            let i = 0;
 
-            t.data.position[0] = mapX(x) * 2.35;
-            t.data.position[1] = 0;
-            t.data.position[2] = mapZ(z) * 2.35;
+            for (let z = 0; z < level.length; z++) {
+                const column = level[z];
+                const mapX = createMap(0, column.length - 1, -((column.length - 1) / 2), (column.length - 1) / 2);
 
-            mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);
+                for (let x = 0; x < column.length; x++) {
+                    const kind = column[x] as Cell;
+                    const cubeEntity = createCubeEntity(`Cube-${x}-${z}`, x, z, kind);
+                    const transform = cubeEntity.getComponent('Transform');
+                    const target = cubeEntity.getComponent('TargetPosition');
 
-            world.spawnEntity(cubeEntity);
+                    transform.data.position[1] += i * 7;
+                    i++;
 
-            if (kind === PLAY) {
-                playerStart.x = x;
-                playerStart.z = z;
-                playerPosition[0] = mapX(x) * 2.35;
-                playerPosition[1] = 1.2;
-                playerPosition[2] = mapZ(z) * 2.35;
+                    target.data.position[0] = mapX(x) * 2.35;
+                    target.data.position[1] = 0;
+                    target.data.position[2] = mapZ(z) * 2.35;
+
+                    world.spawnEntity(cubeEntity);
+
+                    if (kind === PLAY) {
+                        playerStart.x = x;
+                        playerStart.z = z;
+                        playerTarget[0] = mapX(x) * 2.35;
+                        playerTarget[1] = 1.2;
+                        playerTarget[2] = mapZ(z) * 2.35;
+
+                        playerPosition[0] = mapX(x) * 2.35;
+                        playerPosition[1] = 20;
+                        playerPosition[2] = mapZ(z) * 2.35;
+                    }
+                }
             }
+
+            setTimeout(() => {
+                const player = createPlayerEntity(playerStart.x, playerStart.z);
+                const target = player.getComponent('TargetPosition');
+                const transform = player.getComponent('Transform');
+                target.data.position = playerTarget;
+                transform.data.position = playerPosition;
+
+                world.spawnEntity(player);
+                world.dispatchEvent({ type: 'PLAYER_SPAWNED', payload: player });
+            }, 1000);
         }
-    }
-
-    const player = createPlayerEntity(playerStart.x, playerStart.z);
-    const t = player.getComponent('Transform');
-
-    t.data.position = playerPosition;
-    mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);
-
-    world.spawnEntity(player);
-    world.dispatchEvent({ type: 'PLAYER_SPAWNED', payload: player });
+    });
 };

@@ -1,9 +1,8 @@
-import { mat4 } from 'gl-matrix';
 import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
 import { Cell, DEAD, GOAL, Level, SAFE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
-import { PlayerComponent, TransformComponent } from './components';
+import { PlayerComponent, TargetPositionComponent } from './components';
 import { PlayerEntity } from './entities';
 import { WorldAction, WorldEvent, WorldState } from './world';
 
@@ -15,7 +14,7 @@ const isActionKey = (key: unknown): key is Key => actionKeys.includes(key as Key
 type Boundary = { min: number; max: number };
 type Boundaries = { x: Boundary; z: Boundary };
 
-const updatePlayerTransform = (t: TransformComponent, playerComponent: PlayerComponent, level: Level) => {
+const updatePlayerTransform = (t: TargetPositionComponent, playerComponent: PlayerComponent, level: Level) => {
     const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
 
     const mapXForZ = (z: number) =>
@@ -23,8 +22,6 @@ const updatePlayerTransform = (t: TransformComponent, playerComponent: PlayerCom
 
     t.data.position[0] = mapXForZ(playerComponent.data.z)(playerComponent.data.x) * 2.35;
     t.data.position[2] = mapZ(playerComponent.data.z) * 2.35;
-
-    mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);
 };
 
 export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
@@ -49,34 +46,34 @@ export const inputSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
     } = {
         ArrowDown: (playerEntity, boundaries, level) => {
             const playerComponent = playerEntity.getComponent('Player');
-            const transformComponent = playerEntity.getComponent('Transform');
+            const target = playerEntity.getComponent('TargetPosition');
             if (playerComponent.data.z >= boundaries.z.max) return;
             playerComponent.data.z += 1;
-            updatePlayerTransform(transformComponent, playerComponent, level);
+            updatePlayerTransform(target, playerComponent, level);
             updateWorld(playerComponent, level);
         },
         ArrowUp: (playerEntity, boundaries, level) => {
             const playerComponent = playerEntity.getComponent('Player');
-            const transformComponent = playerEntity.getComponent('Transform');
+            const target = playerEntity.getComponent('TargetPosition');
             if (playerComponent.data.z <= boundaries.z.min) return;
             playerComponent.data.z -= 1;
-            updatePlayerTransform(transformComponent, playerComponent, level);
+            updatePlayerTransform(target, playerComponent, level);
             updateWorld(playerComponent, level);
         },
         ArrowLeft: (playerEntity, boundaries, level) => {
             const playerComponent = playerEntity.getComponent('Player');
-            const transformComponent = playerEntity.getComponent('Transform');
+            const target = playerEntity.getComponent('TargetPosition');
             if (playerComponent.data.x <= boundaries.x.min) return;
             playerComponent.data.x -= 1;
-            updatePlayerTransform(transformComponent, playerComponent, level);
+            updatePlayerTransform(target, playerComponent, level);
             updateWorld(playerComponent, level);
         },
         ArrowRight: (playerEntity, boundaries, level) => {
             const playerComponent = playerEntity.getComponent('Player');
-            const transformComponent = playerEntity.getComponent('Transform');
+            const target = playerEntity.getComponent('TargetPosition');
             if (playerComponent.data.x >= boundaries.x.max) return;
             playerComponent.data.x += 1;
-            updatePlayerTransform(transformComponent, playerComponent, level);
+            updatePlayerTransform(target, playerComponent, level);
             updateWorld(playerComponent, level);
         },
     };

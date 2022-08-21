@@ -2,6 +2,15 @@ import { mat4, quat, vec3 } from 'gl-matrix';
 import { createComponent } from '../ecs/component';
 import { Cell } from '../resources/levels';
 
+export const TargetPositionType = 'TargetPosition';
+
+export const createTargetPositionComponent = (position: vec3, easing: number) =>
+    createComponent(TargetPositionType, { position, easing });
+
+export type TargetPositionComponent = ReturnType<typeof createTargetPositionComponent>;
+
+// ===
+
 export const TransformType = 'Transform';
 
 export const createTransformComponent = (position: vec3, rotation: quat, scale: vec3) => {

@@ -11,10 +11,16 @@ const indexByType = (accum: Record<string, Component | undefined>, component: Co
     return accum;
 };
 
+export type Entity<Name extends string = string, Components extends Component[] = Component[]> = {
+    name: Name;
+    componentTypes: string[];
+    getComponent: <Type extends Components[number]['type']>(type: Type) => ObjectFromArray<Components>[Type];
+};
+
 export const createEntity = <Name extends string, Components extends Component[]>(
     name: Name,
     _components: Components,
-) => {
+): Entity<Name, Components> => {
     const components = _components.reduce(indexByType, {}) as ObjectFromArray<Components>;
     return {
         name,
@@ -22,5 +28,3 @@ export const createEntity = <Name extends string, Components extends Component[]
         getComponent: <Type extends Components[number]['type']>(type: Type) => components[type],
     };
 };
-
-export type Entity = ReturnType<typeof createEntity>;
