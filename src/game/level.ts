@@ -12,7 +12,7 @@ export const levelSystem: StartupSystem<World> = (world) => {
     const tileEntities = world.createQuery<TileEntity>(has(TileType)).entities;
 
     world.onStateChange(({ action, newState }) => {
-        if (action.type === 'RUN_LEVEL_UP_ANIMATION') {
+        if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'RE_START') {
             sleep(100).then(async () => {
                 const playerEntity = world.getEntity<PlayerEntity>('Player');
                 const playerTarget = playerEntity.getComponent('TargetTransform');
@@ -79,8 +79,6 @@ export const levelSystem: StartupSystem<World> = (world) => {
 
                 world.dispatch({ type: 'LEVEL_UP' });
             });
-        } else if (action.type === 'LEVEL_UP') {
-            console.log('level up');
         }
     });
 };

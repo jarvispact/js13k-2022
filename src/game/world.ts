@@ -12,7 +12,8 @@ export type WorldAction =
     | { type: 'GAME_OVER' }
     | { type: 'RUN_LEVEL_UP_ANIMATION' }
     | { type: 'LEVEL_UP' }
-    | { type: 'COMPLETE' };
+    | { type: 'COMPLETE' }
+    | { type: 'RE_START' };
 
 export const world = new EcsWorld<WorldState, WorldAction>({
     initialState: { status: 'paused', levels, currentLevel: 0 },
@@ -32,6 +33,8 @@ export const world = new EcsWorld<WorldState, WorldAction>({
                 return { ...state, status: 'running' };
             case 'COMPLETE':
                 return { ...state, status: 'completed' };
+            case 'RE_START':
+                return { ...state, status: 'running', currentLevel: 0 };
             default:
                 return state;
         }

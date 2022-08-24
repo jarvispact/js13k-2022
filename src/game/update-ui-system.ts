@@ -41,10 +41,6 @@ const showStartDialog = (world: World) => {
     btn.onclick = () => {
         world.dispatch({ type: 'RUN_START_ANIMATION' });
         gameMenu.close();
-
-        setTimeout(() => {
-            world.dispatch({ type: 'START' });
-        }, 1500);
     };
 };
 
@@ -73,7 +69,7 @@ const showGameOverDialog = (world: World) => {
     btn.focus();
 
     btn.onclick = () => {
-        world.dispatch({ type: 'START' });
+        world.dispatch({ type: 'RE_START' });
         gameMenu.close();
     };
 };
@@ -135,9 +131,9 @@ export const updateUiSystem: StartupSystem<World> = (world) => {
             ui.showGameOverDialog(world);
         } else if (action.type === 'COMPLETE') {
             ui.showGameCompletedDialog();
-        } else if (action.type === 'RUN_LEVEL_UP_ANIMATION') {
+        } else if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'START' || action.type === 'RE_START') {
             ui.setLevel(newState.currentLevel);
-            ui.flashLevelClear();
+            if (action.type === 'RUN_LEVEL_UP_ANIMATION') ui.flashLevelClear();
         }
     });
 };

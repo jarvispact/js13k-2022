@@ -48,6 +48,8 @@ export const startupSystem: StartupSystem<World> = (world) => {
                                     },
                                 }),
                             );
+
+                            world.dispatch({ type: 'START' });
                         });
                     }
 
