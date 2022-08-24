@@ -3,7 +3,7 @@ import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
 import { Cell, DEAD, GOAL, PLAY, SAFE } from '../resources/levels';
 import { PlayerComponent } from './components';
-import { createCameraEntity, createCubeEntity, createPlayerEntity } from './entities';
+import { createCameraEntity, createTileEntity, createPlayerEntity } from './entities';
 import { WorldState, WorldAction } from './world';
 
 const actionKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'] as const;
@@ -70,7 +70,7 @@ export const startupSystem: StartupSystem<World<WorldState, WorldAction>> = (wor
         const column = levels[currentLevel][z];
         for (let x = 0; x < column.length; x++) {
             const kind = column[x] as Cell;
-            world.spawnEntity(createCubeEntity(`Cube-${x}-${z}`, x, z, kind));
+            world.spawnEntity(createTileEntity(`Cube-${x}-${z}`, x, z, kind));
             if (kind === PLAY) {
                 playerStart.x = x;
                 playerStart.z = z;

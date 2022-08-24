@@ -1,33 +1,33 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { Entity } from '../ecs/entity';
 import { System } from '../ecs/system';
-import { and, has, World } from '../ecs/world';
-import { TargetPositionComponent, TargetPositionType, TransformComponent, TransformType } from './components';
-import { WorldAction, WorldEvent, WorldState } from './world';
+import { and, has } from '../ecs/world';
+import { TargetPositionComponent, TargetTransformType, TransformComponent, TransformType } from './components';
+import { easings } from './easing';
+import { World } from './world';
 
-const easeInOutElastic = (x: number) => {
-    const c5 = (2 * Math.PI) / 4.5;
-
-    return x === 0
-        ? 0
-        : x === 1
-        ? 1
-        : x < 0.5
-        ? -(Math.pow(2, 20 * x - 10) * Math.sin((20 * x - 11.125) * c5)) / 2
-        : (Math.pow(2, -20 * x + 10) * Math.sin((20 * x - 11.125) * c5)) / 2 + 1;
-};
-
-export const createUpdateTransformSystem = (world: World<WorldState, WorldAction, WorldEvent>): System => {
+export const createUpdateTransformSystem = (world: World): System => {
     const entities = world.createQuery<Entity<string, (TransformComponent | TargetPositionComponent)[]>>(
-        and([has(TransformType), has(TargetPositionType)]),
+        and([has(TransformType), has(TargetTransformType)]),
     ).entities;
 
-    return () => {
+    return (delta) => {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
             const t = entity.getComponent('Transform');
-            const tp = entity.getComponent('TargetPosition');
-            vec3.lerp(t.data.position, t.data.position, tp.data.position, easeInOutElastic(tp.data.easing));
+            const tp = entity.getComponent('TargetTransform');
+
+            vec3.lerp(
+                t.data.position,
+                t.data.position,
+                tp.data.position,
+                easings[tp.data.easing.function](tp.data.easing.time),
+            );
+
+            if (tp.data.easing.time < 1) {
+                tp.data.easing.time += tp.data.easing.increment * delta;
+            }
+
             mat4.fromRotationTranslationScale(t.data.modelMatrix, t.data.rotation, t.data.position, t.data.scale);
         }
     };

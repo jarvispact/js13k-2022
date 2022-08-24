@@ -3,7 +3,7 @@ import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
 import { Cell, PLAY } from '../resources/levels';
 import { createMap } from '../utils/create-map';
-import { createCameraEntity, createCubeEntity, createPlayerEntity } from './entities';
+import { createCameraEntity, createTileEntity, createPlayerEntity } from './entities';
 import { WorldAction, WorldEvent, WorldState } from './world';
 
 export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
@@ -33,7 +33,7 @@ export const spawnEntitiesSystem: StartupSystem<World<WorldState, WorldAction, W
 
                 for (let x = 0; x < column.length; x++) {
                     const kind = column[x] as Cell;
-                    const cubeEntity = createCubeEntity(`Cube-${x}-${z}`, x, z, kind);
+                    const cubeEntity = createTileEntity(`Cube-${x}-${z}`, x, z, kind);
                     const transform = cubeEntity.getComponent('Transform');
                     const target = cubeEntity.getComponent('TargetPosition');
 

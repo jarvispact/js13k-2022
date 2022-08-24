@@ -1,6 +1,5 @@
 import { StartupSystem } from '../ecs/system';
-import { World } from '../ecs/world';
-import { WorldAction, WorldEvent, WorldState } from './world';
+import { World } from './world';
 
 const dialogContainer = document.getElementById('dialog') as HTMLDivElement;
 
@@ -14,7 +13,7 @@ const setScore = (score: number) => {
     scoreDisplay.innerText = `Score: ${score}`;
 };
 
-const showStartDialog = (world: World<WorldState, WorldAction, WorldEvent>) => {
+const showStartDialog = (world: World) => {
     const html = `
         <dialog id="game-menu">
         <form method="dialog">
@@ -40,12 +39,16 @@ const showStartDialog = (world: World<WorldState, WorldAction, WorldEvent>) => {
     btn.focus();
 
     btn.onclick = () => {
-        world.dispatch({ type: 'START' });
+        world.dispatch({ type: 'RUN_START_ANIMATION' });
         gameMenu.close();
+
+        setTimeout(() => {
+            world.dispatch({ type: 'START' });
+        }, 1500);
     };
 };
 
-const showGameOverDialog = (world: World<WorldState, WorldAction, WorldEvent>) => {
+const showGameOverDialog = (world: World) => {
     const html = `
         <dialog id="game-menu">
         <form method="dialog">
@@ -124,17 +127,15 @@ const ui = {
     flashLevelClear,
 };
 
-export const updateUiSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
+export const updateUiSystem: StartupSystem<World> = (world) => {
     ui.showStartDialog(world);
 
     world.onStateChange(({ action, newState }) => {
-        if (action.type === 'INCREMENT_SCORE') {
-            ui.setScore(newState.score);
-        } else if (action.type === 'GAME_OVER') {
+        if (action.type === 'GAME_OVER') {
             ui.showGameOverDialog(world);
         } else if (action.type === 'COMPLETE') {
             ui.showGameCompletedDialog();
-        } else if (action.type === 'LEVEL_UP') {
+        } else if (action.type === 'RUN_LEVEL_UP_ANIMATION') {
             ui.setLevel(newState.currentLevel);
             ui.flashLevelClear();
         }

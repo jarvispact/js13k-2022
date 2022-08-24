@@ -1,8 +1,8 @@
 import { System } from '../ecs/system';
 import { has, World } from '../ecs/world';
 import { Cell, DEAD } from '../resources/levels';
-import { CubeType, PlayerType } from './components';
-import { CubeEntity, PlayerEntity } from './entities';
+import { TileType, PlayerType } from './components';
+import { TileEntity, PlayerEntity } from './entities';
 import { WorldAction, WorldEvent, WorldState } from './world';
 
 const setupRows = (rows: string[][], level: Cell[][]) => {
@@ -23,7 +23,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const cubeEntities = world.createQuery(has(CubeType)).entities as CubeEntity[];
+    const cubeEntities = world.createQuery(has(TileType)).entities as TileEntity[];
     const playerEntities = world.createQuery(has(PlayerType)).entities as PlayerEntity[];
 
     const rows: string[][] = [];

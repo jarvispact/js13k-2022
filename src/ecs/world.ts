@@ -55,7 +55,7 @@ type StateChangeSubscriber<State = any, Action = any> = (args: {
     previousState: State;
     newState: State;
     action: Action;
-}) => boolean | void;
+}) => boolean | void | Promise<boolean | void>;
 
 type EventSubsriber<Event = any> = (event: Event) => void;
 

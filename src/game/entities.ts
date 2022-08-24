@@ -1,37 +1,54 @@
-import { quat, vec3 } from 'gl-matrix';
 import { createEntity } from '../ecs/entity';
-import { Cell } from '../resources/levels';
 import {
     createCameraComponent,
     createPlayerComponent,
-    createCubeComponent,
+    createTileComponent,
     createTransformComponent,
-    createTargetPositionComponent,
+    createTargetTransformComponent,
+    TileArgs,
+    TransformArgs,
+    TargetTransformArgs,
+    PlayerArgs,
+    CameraArgs,
 } from './components';
 
-export const createCubeEntity = (name: string, x: number, z: number, kind: Cell) =>
+export const createTileEntity = (
+    name: string,
+    {
+        tile,
+        transform,
+        targetTransform,
+    }: { tile: TileArgs; transform: TransformArgs; targetTransform: TargetTransformArgs },
+) =>
     createEntity(name, [
-        createCubeComponent(x, z, kind),
-        createTransformComponent(vec3.fromValues(0, 20, 0), quat.fromValues(0, 0, 0, 1), vec3.fromValues(1, 0.2, 1)),
-        createTargetPositionComponent(vec3.fromValues(0, 0, 0), 0.47),
+        createTileComponent(tile),
+        createTransformComponent(transform),
+        createTargetTransformComponent(targetTransform),
     ]);
 
-export type CubeEntity = ReturnType<typeof createCubeEntity>;
+export type TileEntity = ReturnType<typeof createTileEntity>;
 
 // ===
 
-export const createPlayerEntity = (x: number, z: number) =>
+export const createPlayerEntity = ({
+    player,
+    transform,
+    targetTransform,
+}: {
+    player: PlayerArgs;
+    transform: TransformArgs;
+    targetTransform: TargetTransformArgs;
+}) =>
     createEntity('Player', [
-        createPlayerComponent(x, z),
-        createTransformComponent(vec3.fromValues(0, 1.2, 0), quat.fromValues(0, 0, 0, 1), vec3.fromValues(0.5, 1, 0.5)),
-        createTargetPositionComponent(vec3.fromValues(0, 1.2, 0), 0.483),
+        createPlayerComponent(player),
+        createTransformComponent(transform),
+        createTargetTransformComponent(targetTransform),
     ]);
 
 export type PlayerEntity = ReturnType<typeof createPlayerEntity>;
 
 // ===
 
-export const createCameraEntity = (position: vec3, lookAt: vec3, aspect: number) =>
-    createEntity('Camera', [createCameraComponent(position, lookAt, aspect)]);
+export const createCameraEntity = (data: CameraArgs) => createEntity('Camera', [createCameraComponent(data)]);
 
 export type CameraEntity = ReturnType<typeof createCameraEntity>;

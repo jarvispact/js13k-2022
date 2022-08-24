@@ -1,11 +1,11 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { System } from '../ecs/system';
-import { has, World } from '../ecs/world';
-import { CubeType } from '../game/components';
-import { CameraEntity, CubeEntity, PlayerEntity } from '../game/entities';
-import { WorldAction, WorldEvent, WorldState } from '../game/world';
+import { has } from '../ecs/world';
+import { TileType } from '../game/components';
+import { CameraEntity, TileEntity, PlayerEntity } from '../game/entities';
+import { World } from '../game/world';
 import { cube } from '../resources/cube';
-import { Cell } from '../resources/levels';
+import { EMPTY_TILE, Tile } from '../resources/levels';
 import {
     createWebgl2ArrayBuffer,
     createWebgl2ElementArrayBuffer,
@@ -65,7 +65,7 @@ const entityUboConfig = {
 
 type CacheEntry<T> = { entity: T; update: () => void; cleanup: () => void };
 
-export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEvent>): System => {
+export const createRenderSystem = (world: World): System => {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -101,25 +101,26 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         sceneUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
     });
 
-    const cubeEntities = world.createQuery<CubeEntity>(has(CubeType)).entities;
+    const tileEntities = world.createQuery<TileEntity>(has(TileType)).entities;
 
-    const cubeRenderCache: CacheEntry<CubeEntity>[] = [];
-    const cachedCubeEntityMap: Record<string, number> = {};
+    const tileRenderCache: CacheEntry<TileEntity>[] = [];
+    const cachedTileEntityMap: Record<string, number> = {};
 
-    const playerColor = vec3.fromValues(1, 1, 1);
+    const playerColor = vec3.fromValues(0, 0, 1);
 
-    const colorForCell: { [K in Cell]: vec3 } = {
-        '0': vec3.fromValues(1, 0, 0),
-        '1': vec3.fromValues(1, 1, 1),
-        '2': vec3.fromValues(0, 1, 0),
-        '3': vec3.fromValues(1, 1, 1),
+    const colorForCell: { [K in Tile]: vec3 } = {
+        '0': vec3.fromValues(1, 1, 1),
+        '1': vec3.fromValues(1, 0, 0),
+        '2': vec3.fromValues(1, 1, 1),
+        '3': vec3.fromValues(0, 1, 0),
+        '4': vec3.fromValues(1, 1, 1),
     };
 
-    const cacheCubeEntity = (entity: CubeEntity): CacheEntry<CubeEntity> => {
-        const idx = cachedCubeEntityMap[entity.name];
-        if (idx !== undefined) return cubeRenderCache[cachedCubeEntityMap[entity.name]];
+    const cacheTileEntity = (entity: TileEntity): CacheEntry<TileEntity> => {
+        const idx = cachedTileEntityMap[entity.name];
+        if (idx !== undefined) return tileRenderCache[cachedTileEntityMap[entity.name]];
 
-        const cubeComponent = entity.getComponent('Cube').data;
+        const tileComponent = entity.getComponent('Tile').data;
         const transformComponent = entity.getComponent('Transform').data;
 
         const vao = createWebgl2VertexArray(gl);
@@ -133,9 +134,10 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
 
         const update = () => {
+            if (tileComponent.tile === EMPTY_TILE) return;
             entityUbo
                 .setMat4('t.mm', transformComponent.modelMatrix)
-                .setVec3('m.color', colorForCell[cubeComponent.kind])
+                .setVec3('m.color', colorForCell[tileComponent.tile])
                 .update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
@@ -149,22 +151,22 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
             gl.deleteVertexArray(vao);
         };
 
-        const cachedEntry: CacheEntry<CubeEntity> = {
+        const cachedEntry: CacheEntry<TileEntity> = {
             entity,
             update,
             cleanup,
         };
 
-        cubeRenderCache.push(cachedEntry);
-        cachedCubeEntityMap[entity.name] = cubeRenderCache.length - 1;
+        tileRenderCache.push(cachedEntry);
+        cachedTileEntityMap[entity.name] = tileRenderCache.length - 1;
         return cachedEntry;
     };
 
     window.addEventListener('unload', () => {
         sceneUbo.cleanup();
 
-        for (let i = 0; i < cubeRenderCache.length; i++) {
-            const cachedEntry = cubeRenderCache[i];
+        for (let i = 0; i < tileRenderCache.length; i++) {
+            const cachedEntry = tileRenderCache[i];
             cachedEntry.cleanup();
         }
     });
@@ -208,12 +210,7 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
     };
 
     return () => {
-        const status = world.getState().status;
-
-        if (status === 'idle' || status === 'completed' || status === 'game-over') {
-            console.log(status);
-            return;
-        }
+        console.log(world.getState().status);
 
         const camera = world.getEntity<CameraEntity>('Camera').getComponent('Camera');
 
@@ -222,9 +219,9 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         // TODO: cache operations
         sceneUbo.setMat4('c.vm', camera.data.viewMatrix).setMat4('c.pm', camera.data.projectionMatrix).update();
 
-        for (let i = 0; i < cubeEntities.length; i++) {
-            const cubeEntity = cubeEntities[i];
-            const cachedEntry = cacheCubeEntity(cubeEntity);
+        for (let i = 0; i < tileEntities.length; i++) {
+            const cubeEntity = tileEntities[i];
+            const cachedEntry = cacheTileEntity(cubeEntity);
             cachedEntry.update();
         }
 
@@ -237,8 +234,8 @@ export const createRenderSystem = (world: World<WorldState, WorldAction, WorldEv
         return () => {
             sceneUbo.cleanup();
 
-            for (let i = 0; i < cubeRenderCache.length; i++) {
-                const cachedEntry = cubeRenderCache[i];
+            for (let i = 0; i < tileRenderCache.length; i++) {
+                const cachedEntry = tileRenderCache[i];
                 cachedEntry.cleanup();
             }
 

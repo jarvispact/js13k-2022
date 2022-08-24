@@ -2,7 +2,7 @@ import { StartupSystem } from '../ecs/system';
 import { World } from '../ecs/world';
 import { PLAY } from '../resources/levels';
 import { createMap } from '../utils/create-map';
-import { CubeEntity, PlayerEntity } from './entities';
+import { TileEntity, PlayerEntity } from './entities';
 import { WorldAction, WorldEvent, WorldState } from './world';
 
 export const levelSystem: StartupSystem<World<WorldState, WorldAction, WorldEvent>> = (world) => {
@@ -22,7 +22,7 @@ export const levelSystem: StartupSystem<World<WorldState, WorldAction, WorldEven
                 for (let x = 0; x < column.length; x++) {
                     const cell = column[x];
 
-                    const cubeEntity = world.getEntity<CubeEntity>(`Cube-${x}-${z}`);
+                    const cubeEntity = world.getEntity<TileEntity>(`Cube-${x}-${z}`);
                     const cube = cubeEntity.getComponent('Cube');
                     cube.data.x = x;
                     cube.data.z = z;
