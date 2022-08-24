@@ -25,7 +25,9 @@ export const startupSystem: StartupSystem<World> = (world) => {
 
             for (let z = 0; z < level.length; z++) {
                 const column = level[z];
-                const mapX = createMap(0, column.length - 1, -((column.length - 1) / 2), (column.length - 1) / 2);
+
+                const columnLength = column.length - 1;
+                const mapX = createMap(0, columnLength, -(columnLength / 2), columnLength / 2);
 
                 for (let x = 0; x < column.length; x++) {
                     const tile = column[x];

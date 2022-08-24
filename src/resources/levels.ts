@@ -77,7 +77,7 @@ const level4: Level = [
     [D, D, G],
     [D, S, S],
     [S, S, D],
-    [S, D, D],
+    [S, S, D],
     [D, P, D],
 ];
 
