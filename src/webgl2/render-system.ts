@@ -110,7 +110,7 @@ export const createRenderSystem = (world: World): System => {
 
     const colorForCell: { [K in Tile]: vec3 } = {
         '0': vec3.fromValues(1, 1, 1),
-        '1': vec3.fromValues(1, 0, 0),
+        '1': vec3.fromValues(1, 1, 1),
         '2': vec3.fromValues(1, 1, 1),
         '3': vec3.fromValues(0, 1, 0),
         '4': vec3.fromValues(1, 1, 1),
@@ -210,8 +210,6 @@ export const createRenderSystem = (world: World): System => {
     };
 
     return () => {
-        console.log(world.getState().status);
-
         const camera = world.getEntity<CameraEntity>('Camera').getComponent('Camera');
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

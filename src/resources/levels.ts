@@ -66,19 +66,19 @@ const level2: Level = [
 ];
 
 const level3: Level = [
-    [E, D, G],
-    [E, D, S],
-    [E, D, S],
-    [E, S, S],
-    [E, P, D],
+    [E, G, E],
+    [S, S, S],
+    [S, D, S],
+    [S, S, S],
+    [E, P, E],
 ];
 
 const level4: Level = [
-    [D, D, G],
-    [D, S, S],
-    [S, S, D],
-    [S, S, D],
-    [D, P, D],
+    [S, S, G],
+    [S, D, D],
+    [S, S, S],
+    [D, D, S],
+    [D, P, S],
 ];
 
 export const levels: Level[] = [level1, level2, level3, level4];
