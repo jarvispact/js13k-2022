@@ -1,9 +1,10 @@
 import { StartupSystem } from '../ecs/system';
-import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level } from '../resources/levels';
+import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level, SAFE_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { PlayerComponent, TargetPositionComponent } from './components';
 import { PlayerEntity, TileEntity } from './entities';
+import { dieSound, levelUpSound, moveSound, SoundPlayer } from './sound';
 import { moveTargetWithAnimation } from './utils';
 import { World } from './world';
 
@@ -31,6 +32,7 @@ const handleNewTile = (
     const newTile = newLevelColumn[playerComponent.data.x];
 
     if (newTile === GOAL_TILE) {
+        SoundPlayer.play(levelUpSound);
         const { levels, currentLevel } = world.getState();
         if (currentLevel === levels.length - 1) {
             world.dispatch({ type: 'COMPLETE' });
@@ -38,12 +40,14 @@ const handleNewTile = (
             world.dispatch({ type: 'RUN_LEVEL_UP_ANIMATION' });
         }
     } else if (newTile === EMPTY_TILE) {
+        SoundPlayer.play(dieSound);
         world.dispatch({ type: 'RUN_FALLING_ANIMATION' });
         sleep(300).then(() => {
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
             world.dispatch({ type: 'GAME_OVER' });
         });
     } else if (newTile === DEADLY_TILE) {
+        SoundPlayer.play(dieSound);
         world.dispatch({ type: 'RUN_FALLING_ANIMATION' });
         const tileEntity = world.getEntity<TileEntity>(`Tile-${playerComponent.data.x}-${playerComponent.data.z}`);
         const tileTarget = tileEntity.getComponent('TargetTransform');
@@ -55,6 +59,8 @@ const handleNewTile = (
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
             world.dispatch({ type: 'GAME_OVER' });
         });
+    } else if (newTile === SAFE_TILE) {
+        SoundPlayer.play(moveSound);
     }
 };
 

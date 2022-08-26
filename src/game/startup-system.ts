@@ -4,6 +4,7 @@ import { PLAYER_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { createCameraEntity, createPlayerEntity, createTileEntity } from './entities';
+import { changeLevelSound, SoundPlayer } from './sound';
 import { World } from './world';
 
 export const startupSystem: StartupSystem<World> = (world) => {
@@ -17,6 +18,7 @@ export const startupSystem: StartupSystem<World> = (world) => {
 
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'RUN_START_ANIMATION') {
+            SoundPlayer.play(changeLevelSound);
             const level = newState.levels[newState.currentLevel];
 
             const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);

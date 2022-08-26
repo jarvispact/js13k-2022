@@ -5,6 +5,7 @@ import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { TileType } from './components';
 import { PlayerEntity, TileEntity } from './entities';
+import { changeLevelSound, SoundPlayer } from './sound';
 import { moveTargetWithAnimation } from './utils';
 import { World } from './world';
 
@@ -64,6 +65,8 @@ export const levelSystem: StartupSystem<World> = (world) => {
                         tileTarget.data.position[2] = mapZ(z) * 2.35;
                     }
                 }
+
+                SoundPlayer.play(changeLevelSound);
 
                 // move tiles back into view
                 for (let i = 0; i < tileEntities.length; i++) {
