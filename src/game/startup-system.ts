@@ -50,8 +50,6 @@ export const startupSystem: StartupSystem<World> = (world) => {
                                     },
                                 }),
                             );
-
-                            world.dispatch({ type: 'START' });
                         });
                     }
 
@@ -71,6 +69,12 @@ export const startupSystem: StartupSystem<World> = (world) => {
                     );
 
                     i++;
+
+                    if (z === level.length - 1 && x === column.length - 1) {
+                        sleep(2000).then(() => {
+                            world.dispatch({ type: 'START' });
+                        });
+                    }
                 }
             }
         }

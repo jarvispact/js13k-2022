@@ -21,7 +21,7 @@ export const createUpdateTransformSystem = (world: World): System => {
                 t.data.position,
                 t.data.position,
                 tp.data.position,
-                easings[tp.data.easing.function](tp.data.easing.time),
+                easings[tp.data.easing.function](Math.min(tp.data.easing.time, 1)),
             );
 
             if (tp.data.easing.time < 1) {

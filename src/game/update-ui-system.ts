@@ -9,23 +9,23 @@ const setLevel = (level: number) => {
     levelDisplay.innerText = `Level: ${level + 1}`;
 };
 
-const setScore = (score: number) => {
-    const scoreDisplay = document.getElementById('score') as HTMLParagraphElement;
-    scoreDisplay.innerText = `Score: ${score}`;
+const setDeaths = (deaths: number) => {
+    const scoreDisplay = document.getElementById('deaths') as HTMLParagraphElement;
+    scoreDisplay.innerText = `Deaths: ${deaths}`;
 };
 
 const showStartDialog = (world: World) => {
     const html = `
         <dialog id="game-menu">
-        <form method="dialog">
-            <h1>
-                The hidden Death
-            </h1>
-            <p>Move with your arrow keys and try to reach the marked tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void.</p>
-            <div>
-                <button id="start">Let's do this</button>
-            </div>
-        </form>
+            <form method="dialog">
+                <h1>
+                    The hidden Death
+                </h1>
+                <p>Move with your arrow keys and try to reach the marked tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void.</p>
+                <div>
+                    <button id="start">Let's do this!</button>
+                </div>
+            </form>
         </dialog>
     `;
 
@@ -48,57 +48,66 @@ const showStartDialog = (world: World) => {
 // eslint-disable-next-line prettier/prettier
 const getTwitterUrl = (text: string) => `http://twitter.com/intent/tweet?text=${encodeURI(text)}&hashtags=js13k,js13k2022&url=https://js13kgames.com/entries/2022`;
 
-const showGameOverDialog = (world: World, level: number) => {
+const showDiedDialog = (world: World, level: number, deaths: number) => {
     // eslint-disable-next-line prettier/prettier
-    const text = `I just died in level ${level + 1} in @jarvispact 's js13k entry for 2022: "The hidden Death". Can you get a higher score?`;
+    const text = `I reached level ${level} ${deaths > 1 ? `but died ${deaths} times along the way` : 'and just died once'} in @jarvispact 's js13k entry for 2022: "The hidden Death". Can you do better?`;
+
+    const uiText = deaths > 1 ? `but died ${deaths} times along the way` : 'and just died once';
 
     const html = `
         <dialog id="game-menu">
-        <form method="dialog">
-            <h1>
-                Oh no, you died!
-            </h1>
-            <p>You died in level: ${level + 1}.</p>
-            <div>
-                <a id="twitter" href="${getTwitterUrl(text)}" target="_blank">Tweet it</a>
-                <button id="new">Try again</button>
-            </div>
-        </form>
+            <form method="dialog">
+                <h1>
+                    You died
+                </h1>
+                <p>You reached level: ${level} ${uiText}</p>
+                <div>
+                    <button id="new">Try this level again</button>
+                    <a id="twitter" href="${getTwitterUrl(text)}" target="_blank">Tweet it</a>
+                </div>
+            </form>
         </dialog>
     `;
 
     dialogContainer.innerHTML = html;
 
     const gameMenu = document.getElementById('game-menu') as HTMLDialogElement;
-    const link = document.getElementById('twitter') as HTMLAnchorElement;
+    const btn = document.getElementById('new') as HTMLButtonElement;
 
     setTimeout(() => {
         gameMenu.show();
-        link.focus();
+        btn.focus();
     }, 50);
 
-    const btn = document.getElementById('new') as HTMLButtonElement;
     btn.onclick = () => {
-        world.dispatch({ type: 'RE_START' });
+        world.dispatch({ type: 'RUN_RE_START_ANIMATION', level, deaths });
         gameMenu.close();
     };
 };
 
-const showGameCompletedDialog = (world: World) => {
-    const text = `I just completed all ${levels.length} levels in @jarvispact 's js13k entry for 2022: "The hidden Death". Can you also complete all levels?`;
+const showGameCompletedDialog = (world: World, deaths: number) => {
+    const zeroDeathsText = `I just completed all ${levels.length} levels without dying a single time in @jarvispact 's js13k entry for 2022: "The hidden Death". I bet you cannot!?`;
+
+    // eslint-disable-next-line prettier/prettier
+    const text = `I just completed all ${levels.length} levels ${deaths > 1 ? `but died ${deaths} times along the way` : 'and only died once'} in @jarvispact 's js13k entry for 2022: "The hidden Death". Can you do better?`;
+
+    const twitterHref = getTwitterUrl(deaths === 0 ? zeroDeathsText : text);
+
+    // eslint-disable-next-line prettier/prettier
+    const uiText = deaths === 0 ? 'and did not die a single time. Great job!' : `and died ${deaths === 1 ? 'one time along the way' : `and died ${deaths} times along the way`}`;
 
     const html = `
         <dialog id="game-menu">
-        <form method="dialog">
-            <h1>
-                Congratulations!
-            </h1>
-            <p>You completed all levels</p>
-            <div>
-                <a id="twitter" href="${getTwitterUrl(text)}" target="_blank">Tweet it</a>
-                <button id="new">Play again</button>
-            </div>
-        </form>
+            <form method="dialog">
+                <h1>
+                    Congratulations!
+                </h1>
+                <p>You completed all levels ${uiText}</p>
+                <div>
+                    <a id="twitter" href="${twitterHref}" target="_blank">Tweet it</a>
+                    <button id="new">Play again</button>
+                </div>
+            </form>
         </dialog>
     `;
 
@@ -114,7 +123,7 @@ const showGameCompletedDialog = (world: World) => {
 
     const btn = document.getElementById('new') as HTMLButtonElement;
     btn.onclick = () => {
-        world.dispatch({ type: 'RE_START' });
+        world.dispatch({ type: 'RUN_RE_START_ANIMATION', level: 0, deaths: 0 });
         gameMenu.close();
     };
 };
@@ -131,9 +140,9 @@ const flashLevelClear = () => {
 
 const ui = {
     setLevel,
-    setScore,
+    setDeaths,
     showStartDialog,
-    showGameOverDialog,
+    showDiedDialog,
     showGameCompletedDialog,
     flashLevelClear,
 };
@@ -142,12 +151,18 @@ export const updateUiSystem: StartupSystem<World> = (world) => {
     ui.showStartDialog(world);
 
     world.onStateChange(({ action, newState }) => {
-        if (action.type === 'GAME_OVER') {
-            ui.showGameOverDialog(world, newState.currentLevel);
+        if (action.type === 'DIE') {
+            ui.showDiedDialog(world, newState.currentLevel, newState.deathCounter);
+            ui.setDeaths(newState.deathCounter);
         } else if (action.type === 'COMPLETE') {
-            ui.showGameCompletedDialog(world);
-        } else if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'START' || action.type === 'RE_START') {
+            ui.showGameCompletedDialog(world, newState.deathCounter);
+        } else if (
+            action.type === 'RUN_LEVEL_UP_ANIMATION' ||
+            action.type === 'START' ||
+            action.type === 'RUN_RE_START_ANIMATION'
+        ) {
             ui.setLevel(newState.currentLevel);
+            ui.setDeaths(newState.deathCounter);
             if (action.type === 'RUN_LEVEL_UP_ANIMATION') ui.flashLevelClear();
         }
     });

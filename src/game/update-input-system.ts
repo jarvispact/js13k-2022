@@ -22,10 +22,10 @@ const handleNewTile = (
     const newLevelColumn = level[playerComponent.data.z];
 
     if (!newLevelColumn) {
-        world.dispatch({ type: 'RUN_FALLING_ANIMATION' });
+        world.dispatch({ type: 'RUN_DYING_ANIMATION' });
         sleep(300).then(() => {
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
-            world.dispatch({ type: 'GAME_OVER' });
+            world.dispatch({ type: 'DIE' });
         });
     }
 
@@ -39,16 +39,16 @@ const handleNewTile = (
         } else {
             world.dispatch({ type: 'RUN_LEVEL_UP_ANIMATION' });
         }
-    } else if (newTile === EMPTY_TILE) {
+    } else if (newTile === EMPTY_TILE || newTile === undefined) {
         SoundPlayer.play(dieSound);
-        world.dispatch({ type: 'RUN_FALLING_ANIMATION' });
+        world.dispatch({ type: 'RUN_DYING_ANIMATION' });
         sleep(300).then(() => {
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
-            world.dispatch({ type: 'GAME_OVER' });
+            world.dispatch({ type: 'DIE' });
         });
     } else if (newTile === DEADLY_TILE) {
         SoundPlayer.play(dieSound);
-        world.dispatch({ type: 'RUN_FALLING_ANIMATION' });
+        world.dispatch({ type: 'RUN_DYING_ANIMATION' });
         const tileEntity = world.getEntity<TileEntity>(`Tile-${playerComponent.data.x}-${playerComponent.data.z}`);
         const tileTarget = tileEntity.getComponent('TargetTransform');
         sleep(150).then(async () => {
@@ -57,7 +57,7 @@ const handleNewTile = (
             await sleep(150);
 
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
-            world.dispatch({ type: 'GAME_OVER' });
+            world.dispatch({ type: 'DIE' });
         });
     } else if (newTile === SAFE_TILE) {
         SoundPlayer.play(moveSound);

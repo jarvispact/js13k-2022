@@ -13,7 +13,7 @@ export const levelSystem: StartupSystem<World> = (world) => {
     const tileEntities = world.createQuery<TileEntity>(has(TileType)).entities;
 
     world.onStateChange(({ action, newState }) => {
-        if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'RE_START') {
+        if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'RUN_RE_START_ANIMATION') {
             sleep(100).then(async () => {
                 const playerEntity = world.getEntity<PlayerEntity>('Player');
                 const playerTarget = playerEntity.getComponent('TargetTransform');
@@ -28,7 +28,7 @@ export const levelSystem: StartupSystem<World> = (world) => {
                 for (let i = 0; i < tileEntities.length; i++) {
                     const tileEntity = tileEntities[i];
                     const tileTarget = tileEntity.getComponent('TargetTransform');
-                    moveTargetWithAnimation(tileTarget, 1, 20 + i * i, 0.01);
+                    moveTargetWithAnimation(tileTarget, 1, 20 + i * i, 1, 'easeInQuart');
                 }
 
                 await sleep(1000);
@@ -80,7 +80,15 @@ export const levelSystem: StartupSystem<World> = (world) => {
                 // move player back into view
                 moveTargetWithAnimation(playerTarget, 1, 1.2, 0.1);
 
-                world.dispatch({ type: 'LEVEL_UP' });
+                await sleep(1000);
+
+                if (action.type === 'RUN_LEVEL_UP_ANIMATION') {
+                    world.dispatch({ type: 'LEVEL_UP' });
+                }
+
+                if (action.type === 'RUN_RE_START_ANIMATION') {
+                    world.dispatch({ type: 'RE_START' });
+                }
             });
         }
     });
