@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cube Death</title>
+    <title>The hidden Death</title>
     <style>
       #canvas {
         position: fixed;
         inset: 0;
         background-color: black;
       }
-
       #info {
         position: fixed;
         top: 20px;
@@ -18,11 +17,9 @@
         color: white;
         font-family: monospace;
       }
-
       #info p {
         margin: 0;
       }
-
       #level-clear {
         position: fixed;
         top: 100px;
@@ -34,7 +31,6 @@
         font-size: 1rem;
         font-family: monospace;
       }
-
       #game-menu {
         position: fixed;
         inset: 0;
@@ -45,12 +41,10 @@
         border-radius: 4px;
         max-width: 90%;
       }
-
       #game-menu h1 {
         font-size: 1.3rem;
       }
-
-      #game-menu button {
+      #game-menu button, a {
         background-color: #4f46e5;
         color: white;
         border-radius: 4px;
@@ -59,28 +53,29 @@
         outline-color: #a5b4fc;
         outline-offset: 2px;
         padding: 0.5rem;
+        text-decoration: none;
       }
-
       #game-menu[open] {
         opacity: 1;
         top: 0px;
       }
-
       #game-menu:not([open]) {
         display: block;
         opacity: 0;
+      }
+
+      @media screen and (min-width: 900px) {
+        #game-menu {
+          max-width: 600px;
+        }
       }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
-    <div id="info">
-      <p id="level">Level: 1</p>
-      <p id="score">Score: 0</p>
-    </div>
+    <div id="info"><p id="level">Level: 1</p></div>
     <p id="level-clear">Level clear</p>
-    <div id="dialog">
-    </div>
+    <div id="dialog"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
