@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix';
 import { StartupSystem } from '../ecs/system';
-import { PLAYER_TILE } from '../resources/levels';
+import { levels, PLAYER_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { createCameraEntity, createPlayerEntity, createTileEntity } from './entities';
@@ -19,7 +19,7 @@ export const startupSystem: StartupSystem<World> = (world) => {
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'RUN_START_ANIMATION') {
             SoundPlayer.play(changeLevelSound);
-            const level = newState.levels[newState.currentLevel];
+            const level = levels[newState.currentLevel];
 
             const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
 

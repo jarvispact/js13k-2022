@@ -1,17 +1,19 @@
-export const moveSound = (t: (i: number, n: number) => number, i: number) => {
+type TimeFunction = (i: number, n: number) => number;
+
+export const moveSound = (t: TimeFunction, i: number) => {
     const n = 1e4;
     if (i > n) return null;
     return (Math.pow(i, 1.055) & 128 ? 1 : -1) * Math.pow(t(i, n), 2);
 };
 
-export const dieSound = (t: (i: number, n: number) => number, i: number) => {
+export const dieSound = (t: TimeFunction, i: number) => {
     i = Math.pow(i, 0.96) * 1.3;
     const n = 9e4;
     if (i > n) return null;
     return ((i + Math.sin(i / 1900) * 80) & 64 ? 1 : -1) * Math.pow(t(i, n), 3);
 };
 
-export const levelUpSound = (t: (i: number, n: number) => number, i: number) => {
+export const levelUpSound = (t: TimeFunction, i: number) => {
     const notes = [0, 4, 7, 12, undefined, 7, 12];
     const n = 3.5e4;
     if (i > n) return null;
@@ -23,7 +25,7 @@ export const levelUpSound = (t: (i: number, n: number) => number, i: number) => 
     return (i * r) & 64 ? q : -q;
 };
 
-export const changeLevelSound = (t: (i: number, n: number) => number, i: number) => {
+export const changeLevelSound = (t: TimeFunction, i: number) => {
     const n = 11e4;
     if (i > n) return null;
     const q = t(i, n);
@@ -39,7 +41,7 @@ const createSoundPlayer = () => {
     const b = m.getChannelData(0);
 
     return {
-        play: (sound: (t: (i: number, n: number) => number, i: number) => number | null) => {
+        play: (sound: (t: TimeFunction, i: number) => number | null) => {
             for (let i = 96e3; i--; ) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore

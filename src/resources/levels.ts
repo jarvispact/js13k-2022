@@ -1,38 +1,3 @@
-/* eslint-disable prettier/prettier */
-// export const DEAD = 0;
-// export const SAFE = 1;
-// export const GOAL = 2;
-// export const PLAY = 3;
-
-// export type Cell = typeof DEAD | typeof SAFE | typeof GOAL | typeof PLAY;
-// export type Level = Cell[][];
-
-// const level1: Cell[][] = [
-//     [SAFE, GOAL, DEAD],
-//     [SAFE, DEAD, DEAD],
-//     [SAFE, SAFE, DEAD],
-//     [DEAD, SAFE, SAFE],
-//     [DEAD, DEAD, PLAY],
-// ];
-
-// const level2: Cell[][] = [
-//     [GOAL, DEAD, DEAD],
-//     [SAFE, DEAD, DEAD],
-//     [SAFE, SAFE, DEAD],
-//     [DEAD, SAFE, DEAD],
-//     [DEAD, PLAY, DEAD],
-// ];
-
-// const level3: Cell[][] = [
-//     [DEAD, SAFE, GOAL],
-//     [DEAD, SAFE, DEAD],
-//     [DEAD, SAFE, DEAD],
-//     [DEAD, SAFE, DEAD],
-//     [DEAD, PLAY, DEAD],
-// ];
-
-// export const levels: Level[] = [level1, level2, level3];
-
 const E = 0;
 const D = 1;
 const S = 2;
@@ -47,7 +12,6 @@ export const PLAYER_TILE = P;
 
 export type Tile = typeof E | typeof D | typeof S | typeof G | typeof P;
 export type Level = Tile[][];
-
 
 const level1: Level = [
     [E, G, E],

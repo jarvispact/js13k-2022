@@ -1,5 +1,5 @@
 import { StartupSystem } from '../ecs/system';
-import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level, SAFE_TILE } from '../resources/levels';
+import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level, levels, SAFE_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { PlayerComponent, TargetPositionComponent } from './components';
@@ -33,7 +33,7 @@ const handleNewTile = (
 
     if (newTile === GOAL_TILE) {
         SoundPlayer.play(levelUpSound);
-        const { levels, currentLevel } = world.getState();
+        const { currentLevel } = world.getState();
         if (currentLevel === levels.length - 1) {
             world.dispatch({ type: 'COMPLETE' });
         } else {
@@ -132,7 +132,7 @@ export const inputSystem: StartupSystem<World> = (world) => {
 
             document.addEventListener('keyup', (e) => {
                 if (!isActionKey(e.key)) return;
-                const { levels, currentLevel, status } = world.getState();
+                const { currentLevel, status } = world.getState();
                 const level = levels[currentLevel];
                 if (status !== 'running') return;
                 actionMap[e.key](playerEntity, level, world);

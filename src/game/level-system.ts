@@ -1,6 +1,6 @@
 import { StartupSystem } from '../ecs/system';
 import { has } from '../ecs/world';
-import { PLAYER_TILE } from '../resources/levels';
+import { levels, PLAYER_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { TileType } from './components';
@@ -33,7 +33,7 @@ export const levelSystem: StartupSystem<World> = (world) => {
 
                 await sleep(1000);
 
-                const level = newState.levels[newState.currentLevel];
+                const level = levels[newState.currentLevel];
                 const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
 
                 // move tiles and player to the correct positions

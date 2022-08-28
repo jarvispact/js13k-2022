@@ -1,9 +1,8 @@
 import { World as EcsWorld } from '../ecs/world';
-import { Level, levels } from '../resources/levels';
 
 type Status = 'paused' | 'animating' | 'running' | 'game-over' | 'completed';
 
-export type WorldState = { status: Status; levels: Level[]; currentLevel: number };
+export type WorldState = { status: Status; currentLevel: number };
 
 export type WorldAction =
     | { type: 'RUN_START_ANIMATION' }
@@ -16,7 +15,7 @@ export type WorldAction =
     | { type: 'RE_START' };
 
 export const world = new EcsWorld<WorldState, WorldAction>({
-    initialState: { status: 'paused', levels, currentLevel: 0 },
+    initialState: { status: 'paused', currentLevel: 0 },
     stateReducer: (state, action) => {
         switch (action.type) {
             case 'RUN_START_ANIMATION':
