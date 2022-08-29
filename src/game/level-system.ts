@@ -14,7 +14,7 @@ export const levelSystem: StartupSystem<World> = (world) => {
 
     world.onStateChange(({ action, newState }) => {
         if (action.type === 'RUN_LEVEL_UP_ANIMATION' || action.type === 'RUN_RE_START_ANIMATION') {
-            sleep(100).then(async () => {
+            sleep(200).then(async () => {
                 const playerEntity = world.getEntity<PlayerEntity>('Player');
                 const playerTarget = playerEntity.getComponent('TargetTransform');
                 const playerComponent = playerEntity.getComponent('Player');

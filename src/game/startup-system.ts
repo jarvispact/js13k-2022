@@ -10,7 +10,7 @@ import { World } from './world';
 export const startupSystem: StartupSystem<World> = (world) => {
     world.spawnEntity(
         createCameraEntity({
-            position: vec3.fromValues(0, 4, 10),
+            position: vec3.fromValues(0, 5, 15),
             lookAt: vec3.fromValues(0, 0, 0),
             aspect: window.innerWidth / window.innerHeight,
         }),

@@ -2,7 +2,6 @@ import { StartupSystem } from '../ecs/system';
 import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level, levels, SAFE_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
-import { PlayerComponent, TargetPositionComponent } from './components';
 import { PlayerEntity, TileEntity } from './entities';
 import { dieSound, levelUpSound, moveSound, SoundPlayer } from './sound';
 import { moveTargetWithAnimation } from './utils';
@@ -13,12 +12,44 @@ type Key = typeof actionKeys[number];
 
 const isActionKey = (key: unknown): key is Key => actionKeys.includes(key as Key);
 
-const handleNewTile = (
-    level: Level,
-    playerComponent: PlayerComponent,
-    playerTarget: TargetPositionComponent,
-    world: World,
-) => {
+const handleNewTile = (direction: Key, playerEntity: PlayerEntity, level: Level, world: World) => {
+    const playerComponent = playerEntity.getComponent('Player');
+    const playerTarget = playerEntity.getComponent('TargetTransform');
+
+    if (direction === 'ArrowDown') {
+        playerComponent.data.z += 1;
+        const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
+        moveTargetWithAnimation(playerTarget, 2, mapZ(playerComponent.data.z) * 2.35, 2.3);
+    } else if (direction === 'ArrowUp') {
+        playerComponent.data.z -= 1;
+        const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
+        moveTargetWithAnimation(playerTarget, 2, mapZ(playerComponent.data.z) * 2.35, 2.3);
+    } else if (direction === 'ArrowLeft') {
+        playerComponent.data.x -= 1;
+        const levelColumn = level[playerComponent.data.z] || [];
+
+        const mapX = createMap(
+            0,
+            levelColumn.length - 1,
+            -((levelColumn.length - 1) / 2),
+            (levelColumn.length - 1) / 2,
+        );
+
+        moveTargetWithAnimation(playerTarget, 0, mapX(playerComponent.data.x) * 2.35, 2.3);
+    } else if (direction === 'ArrowRight') {
+        playerComponent.data.x += 1;
+        const levelColumn = level[playerComponent.data.z] || [];
+
+        const mapX = createMap(
+            0,
+            levelColumn.length - 1,
+            -((levelColumn.length - 1) / 2),
+            (levelColumn.length - 1) / 2,
+        );
+
+        moveTargetWithAnimation(playerTarget, 0, mapX(playerComponent.data.x) * 2.35, 2.3);
+    }
+
     const newLevelColumn = level[playerComponent.data.z];
 
     if (!newLevelColumn) {
@@ -68,60 +99,16 @@ const actionMap: {
     [K in Key]: (playerEntity: PlayerEntity, level: Level, world: World) => void;
 } = {
     ArrowDown: (playerEntity, level, world) => {
-        const playerComponent = playerEntity.getComponent('Player');
-        const playerTarget = playerEntity.getComponent('TargetTransform');
-
-        playerComponent.data.z += 1;
-
-        const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
-        moveTargetWithAnimation(playerTarget, 2, mapZ(playerComponent.data.z) * 2.35, 1.5);
-        handleNewTile(level, playerComponent, playerTarget, world);
+        handleNewTile('ArrowDown', playerEntity, level, world);
     },
     ArrowUp: (playerEntity, level, world) => {
-        const playerComponent = playerEntity.getComponent('Player');
-        const playerTarget = playerEntity.getComponent('TargetTransform');
-
-        playerComponent.data.z -= 1;
-
-        const mapZ = createMap(0, level.length - 1, -((level.length - 1) / 2), (level.length - 1) / 2);
-        moveTargetWithAnimation(playerTarget, 2, mapZ(playerComponent.data.z) * 2.35, 1.5);
-        handleNewTile(level, playerComponent, playerTarget, world);
+        handleNewTile('ArrowUp', playerEntity, level, world);
     },
     ArrowLeft: (playerEntity, level, world) => {
-        const playerComponent = playerEntity.getComponent('Player');
-        const playerTarget = playerEntity.getComponent('TargetTransform');
-
-        playerComponent.data.x -= 1;
-
-        const levelColumn = level[playerComponent.data.z] || [];
-
-        const mapX = createMap(
-            0,
-            levelColumn.length - 1,
-            -((levelColumn.length - 1) / 2),
-            (levelColumn.length - 1) / 2,
-        );
-
-        moveTargetWithAnimation(playerTarget, 0, mapX(playerComponent.data.x) * 2.35, 1.5);
-        handleNewTile(level, playerComponent, playerTarget, world);
+        handleNewTile('ArrowLeft', playerEntity, level, world);
     },
     ArrowRight: (playerEntity, level, world) => {
-        const playerComponent = playerEntity.getComponent('Player');
-        const playerTarget = playerEntity.getComponent('TargetTransform');
-
-        playerComponent.data.x += 1;
-
-        const levelColumn = level[playerComponent.data.z] || [];
-
-        const mapX = createMap(
-            0,
-            levelColumn.length - 1,
-            -((levelColumn.length - 1) / 2),
-            (levelColumn.length - 1) / 2,
-        );
-
-        moveTargetWithAnimation(playerTarget, 0, mapX(playerComponent.data.x) * 2.35, 1.5);
-        handleNewTile(level, playerComponent, playerTarget, world);
+        handleNewTile('ArrowRight', playerEntity, level, world);
     },
 };
 
@@ -136,6 +123,39 @@ export const inputSystem: StartupSystem<World> = (world) => {
                 const level = levels[currentLevel];
                 if (status !== 'running') return;
                 actionMap[e.key](playerEntity, level, world);
+            });
+
+            const upButton = document.getElementById('up') as HTMLButtonElement;
+            const leftButton = document.getElementById('left') as HTMLButtonElement;
+            const rightButton = document.getElementById('right') as HTMLButtonElement;
+            const downButton = document.getElementById('down') as HTMLButtonElement;
+
+            upButton.addEventListener('click', () => {
+                const { currentLevel, status } = world.getState();
+                const level = levels[currentLevel];
+                if (status !== 'running') return;
+                handleNewTile('ArrowUp', playerEntity, level, world);
+            });
+
+            leftButton.addEventListener('click', () => {
+                const { currentLevel, status } = world.getState();
+                const level = levels[currentLevel];
+                if (status !== 'running') return;
+                handleNewTile('ArrowLeft', playerEntity, level, world);
+            });
+
+            rightButton.addEventListener('click', () => {
+                const { currentLevel, status } = world.getState();
+                const level = levels[currentLevel];
+                if (status !== 'running') return;
+                handleNewTile('ArrowRight', playerEntity, level, world);
+            });
+
+            downButton.addEventListener('click', () => {
+                const { currentLevel, status } = world.getState();
+                const level = levels[currentLevel];
+                if (status !== 'running') return;
+                handleNewTile('ArrowDown', playerEntity, level, world);
             });
         }
     });
