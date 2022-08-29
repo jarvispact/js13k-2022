@@ -6,7 +6,7 @@ const dialogContainer = document.getElementById('dialog') as HTMLDivElement;
 
 const setLevel = (level: number) => {
     const levelDisplay = document.getElementById('level') as HTMLParagraphElement;
-    levelDisplay.innerText = `Level: ${level + 1}`;
+    levelDisplay.innerText = `Level: ${level + 1} of ${levels.length}`;
 };
 
 const setDeaths = (deaths: number) => {
