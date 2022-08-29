@@ -1,6 +1,7 @@
 import { StartupSystem } from '../ecs/system';
 import { DEADLY_TILE, EMPTY_TILE, GOAL_TILE, Level, levels, SAFE_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
+import { objectKeys } from '../utils/object-keys';
 import { sleep } from '../utils/sleep';
 import { PlayerEntity, TileEntity } from './entities';
 import { dieSound, levelUpSound, moveSound, SoundPlayer } from './sound';
@@ -113,50 +114,42 @@ const actionMap: {
     },
 };
 
+const flashArrowButton = (btn: HTMLButtonElement) => {
+    btn.style.borderColor = 'green';
+    sleep(150).then(() => {
+        btn.style.borderColor = 'transparent';
+    });
+};
+
 export const inputSystem: StartupSystem<World> = (world) => {
     world.onStateChange(({ action }) => {
         if (action.type === 'START') {
             const playerEntity = world.getEntity<PlayerEntity>('Player');
+
+            const buttons: { [K in Key]: HTMLButtonElement } = {
+                ArrowUp: document.getElementById('up') as HTMLButtonElement,
+                ArrowLeft: document.getElementById('left') as HTMLButtonElement,
+                ArrowRight: document.getElementById('right') as HTMLButtonElement,
+                ArrowDown: document.getElementById('down') as HTMLButtonElement,
+            };
 
             document.addEventListener('keyup', (e) => {
                 if (!isActionKey(e.key)) return;
                 const { currentLevel, status } = world.getState();
                 const level = levels[currentLevel];
                 if (status !== 'running') return;
+                flashArrowButton(buttons[e.key]);
                 actionMap[e.key](playerEntity, level, world);
             });
 
-            const upButton = document.getElementById('up') as HTMLButtonElement;
-            const leftButton = document.getElementById('left') as HTMLButtonElement;
-            const rightButton = document.getElementById('right') as HTMLButtonElement;
-            const downButton = document.getElementById('down') as HTMLButtonElement;
-
-            upButton.addEventListener('click', () => {
-                const { currentLevel, status } = world.getState();
-                const level = levels[currentLevel];
-                if (status !== 'running') return;
-                handleNewTile('ArrowUp', playerEntity, level, world);
-            });
-
-            leftButton.addEventListener('click', () => {
-                const { currentLevel, status } = world.getState();
-                const level = levels[currentLevel];
-                if (status !== 'running') return;
-                handleNewTile('ArrowLeft', playerEntity, level, world);
-            });
-
-            rightButton.addEventListener('click', () => {
-                const { currentLevel, status } = world.getState();
-                const level = levels[currentLevel];
-                if (status !== 'running') return;
-                handleNewTile('ArrowRight', playerEntity, level, world);
-            });
-
-            downButton.addEventListener('click', () => {
-                const { currentLevel, status } = world.getState();
-                const level = levels[currentLevel];
-                if (status !== 'running') return;
-                handleNewTile('ArrowDown', playerEntity, level, world);
+            objectKeys(buttons).forEach((key) => {
+                buttons[key].addEventListener('click', () => {
+                    const { currentLevel, status } = world.getState();
+                    const level = levels[currentLevel];
+                    if (status !== 'running') return;
+                    flashArrowButton(buttons[key]);
+                    handleNewTile(key, playerEntity, level, world);
+                });
             });
         }
     });
