@@ -58,6 +58,7 @@ const handleNewTile = (direction: Key, playerEntity: PlayerEntity, level: Level,
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
             world.dispatch({ type: 'DIE' });
         });
+        return;
     }
 
     const newTile = newLevelColumn[playerComponent.data.x];
