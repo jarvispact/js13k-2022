@@ -89,6 +89,10 @@ export const createRenderSystem = (world: World): System => {
 
         const camera = world.getEntity<CameraEntity>('Camera').getComponent('Camera');
         camera.data.aspect = window.innerWidth / window.innerHeight;
+        camera.data.position[2] = camera.data.aspect < 0.48 ? 20 : window.innerWidth < 1200 ? 16 : 12;
+        camera.data.position[1] = window.innerWidth < 1200 ? 6 : 3;
+
+        mat4.lookAt(camera.data.viewMatrix, camera.data.position, camera.data.lookAt, camera.data.upVector);
 
         mat4.perspective(
             camera.data.projectionMatrix,

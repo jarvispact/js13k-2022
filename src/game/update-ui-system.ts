@@ -21,7 +21,11 @@ const showStartDialog = (world: World) => {
                 <h1>
                     The hidden Death
                 </h1>
-                <p>Move with your arrow keys and try to reach the marked tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void.</p>
+                <p>Move with the arrow keys and try to reach the marked tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void. Good luck!</p>
+                <div id="settings">
+                    <input id="sound" type="checkbox" checked />
+                    <label>Sound</label>
+                </div>
                 <div>
                     <button id="start">Let's do this!</button>
                 </div>
@@ -32,12 +36,17 @@ const showStartDialog = (world: World) => {
     dialogContainer.innerHTML = html;
 
     const gameMenu = document.getElementById('game-menu') as HTMLDialogElement;
+    const btn = document.getElementById('start') as HTMLButtonElement;
+
     setTimeout(() => {
         gameMenu.show();
+        btn.focus();
     }, 50);
 
-    const btn = document.getElementById('start') as HTMLButtonElement;
-    btn.focus();
+    const sound = document.getElementById('sound') as HTMLInputElement;
+    sound.onchange = (event) => {
+        world.dispatch({ type: 'SET_SOUND', sound: (event.target as HTMLInputElement).checked });
+    };
 
     btn.onclick = () => {
         world.dispatch({ type: 'RUN_START_ANIMATION' });

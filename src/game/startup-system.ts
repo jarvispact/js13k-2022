@@ -8,11 +8,17 @@ import { changeLevelSound, SoundPlayer } from './sound';
 import { World } from './world';
 
 export const startupSystem: StartupSystem<World> = (world) => {
+    const aspect = window.innerWidth / window.innerHeight;
+
     world.spawnEntity(
         createCameraEntity({
-            position: vec3.fromValues(0, 6, 16),
-            lookAt: vec3.fromValues(0, 0, 0),
-            aspect: window.innerWidth / window.innerHeight,
+            position: vec3.fromValues(
+                0,
+                window.innerWidth < 1200 ? 6 : 3,
+                aspect < 0.48 ? 20 : window.innerWidth < 1200 ? 16 : 12,
+            ),
+            lookAt: vec3.fromValues(0, 0, 3),
+            aspect,
         }),
     );
 

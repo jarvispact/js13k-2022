@@ -2,9 +2,10 @@ import { World as EcsWorld } from '../ecs/world';
 
 type Status = 'paused' | 'animating' | 'running' | 'dead' | 'completed';
 
-export type WorldState = { status: Status; currentLevel: number; deathCounter: number };
+export type WorldState = { status: Status; currentLevel: number; deathCounter: number; sound: boolean };
 
 export type WorldAction =
+    | { type: 'SET_SOUND'; sound: boolean }
     | { type: 'RUN_START_ANIMATION' }
     | { type: 'START' }
     | { type: 'RUN_DYING_ANIMATION' }
@@ -16,9 +17,11 @@ export type WorldAction =
     | { type: 'RE_START' };
 
 export const world = new EcsWorld<WorldState, WorldAction>({
-    initialState: { status: 'paused', currentLevel: 0, deathCounter: 0 },
+    initialState: { status: 'paused', currentLevel: 0, deathCounter: 0, sound: true },
     stateReducer: (state, action) => {
         switch (action.type) {
+            case 'SET_SOUND':
+                return { ...state, sound: action.sound };
             case 'RUN_START_ANIMATION':
                 return { ...state, status: 'animating' };
             case 'START':

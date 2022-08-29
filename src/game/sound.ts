@@ -1,3 +1,5 @@
+import { world } from './world';
+
 type TimeFunction = (i: number, n: number) => number;
 
 export const moveSound = (t: TimeFunction, i: number) => {
@@ -35,13 +37,14 @@ export const changeLevelSound = (t: TimeFunction, i: number) => {
 const createSoundPlayer = () => {
     const t = (i: number, n: number) => (n - i) / n;
 
-    // Sound player
     const A = new AudioContext();
     const m = A.createBuffer(1, 96e3, 48e3);
     const b = m.getChannelData(0);
 
     return {
         play: (sound: (t: TimeFunction, i: number) => number | null) => {
+            if (!world.getState().sound) return;
+
             for (let i = 96e3; i--; ) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
