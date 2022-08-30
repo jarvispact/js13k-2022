@@ -103,7 +103,7 @@ const showGameCompletedDialog = (world: World, deaths: number) => {
     const twitterHref = getTwitterUrl(deaths === 0 ? zeroDeathsText : text);
 
     // eslint-disable-next-line prettier/prettier
-    const uiText = deaths === 0 ? 'and did not die a single time. Great job!' : `and died ${deaths === 1 ? 'one time along the way' : `and died ${deaths} times along the way`}`;
+    const uiText = deaths === 0 ? 'and did not die a single time. Great job!' : `and died ${deaths === 1 ? 'one time along the way' : `${deaths} times along the way`}`;
 
     const html = `
         <dialog id="game-menu">
