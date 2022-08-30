@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { System } from '../ecs/system';
 import { has } from '../ecs/world';
 import { TileType } from '../game/components';
@@ -65,6 +65,119 @@ const entityUboConfig = {
 
 type CacheEntry<T> = { entity: T; update: () => void; cleanup: () => void };
 
+const createPlayerGeometry = () => {
+    const headPositions = [...cube.positions];
+    const leftArmPositions = [...cube.positions];
+    const rightArmPositions = [...cube.positions];
+    const bodyPositions = [...cube.positions];
+
+    const tmp = vec3.create();
+
+    const headMatrix = mat4.create();
+
+    mat4.fromRotationTranslationScale(
+        headMatrix,
+        quat.fromValues(0, 0, 0, 1),
+        vec3.fromValues(0, 0.35, 0),
+        vec3.fromValues(0.25, 0.25, 0.25),
+    );
+
+    for (let i = 0; i < headPositions.length; i += 3) {
+        const x = headPositions[i];
+        const y = headPositions[i + 1];
+        const z = headPositions[i + 2];
+        vec3.set(tmp, x, y, z);
+        vec3.transformMat4(tmp, tmp, headMatrix);
+        headPositions[i] = tmp[0];
+        headPositions[i + 1] = tmp[1];
+        headPositions[i + 2] = tmp[2];
+    }
+
+    const leftArmMatrix = mat4.create();
+
+    mat4.fromRotationTranslationScale(
+        leftArmMatrix,
+        quat.fromValues(0, 0, 0, 1),
+        vec3.fromValues(-0.35, -0.25, 0),
+        vec3.fromValues(0.1, 0.2, 0.1),
+    );
+
+    for (let i = 0; i < leftArmPositions.length; i += 3) {
+        const x = leftArmPositions[i];
+        const y = leftArmPositions[i + 1];
+        const z = leftArmPositions[i + 2];
+        vec3.set(tmp, x, y, z);
+        vec3.transformMat4(tmp, tmp, leftArmMatrix);
+        leftArmPositions[i] = tmp[0];
+        leftArmPositions[i + 1] = tmp[1];
+        leftArmPositions[i + 2] = tmp[2];
+    }
+
+    const rightArmMatrix = mat4.create();
+
+    mat4.fromRotationTranslationScale(
+        rightArmMatrix,
+        quat.fromValues(0, 0, 0, 1),
+        vec3.fromValues(0.35, -0.25, 0),
+        vec3.fromValues(0.1, 0.2, 0.1),
+    );
+
+    for (let i = 0; i < rightArmPositions.length; i += 3) {
+        const x = rightArmPositions[i];
+        const y = rightArmPositions[i + 1];
+        const z = rightArmPositions[i + 2];
+        vec3.set(tmp, x, y, z);
+        vec3.transformMat4(tmp, tmp, rightArmMatrix);
+        rightArmPositions[i] = tmp[0];
+        rightArmPositions[i + 1] = tmp[1];
+        rightArmPositions[i + 2] = tmp[2];
+    }
+
+    const bodyMatrix = mat4.create();
+
+    mat4.fromRotationTranslationScale(
+        bodyMatrix,
+        quat.fromValues(0, 0, 0, 1),
+        vec3.fromValues(0, -0.5, 0),
+        vec3.fromValues(0.2, 0.5, 0.2),
+    );
+
+    for (let i = 0; i < bodyPositions.length; i += 3) {
+        const x = bodyPositions[i];
+        const y = bodyPositions[i + 1];
+        const z = bodyPositions[i + 2];
+        vec3.set(tmp, x, y, z);
+        vec3.transformMat4(tmp, tmp, bodyMatrix);
+        bodyPositions[i] = tmp[0];
+        bodyPositions[i + 1] = tmp[1];
+        bodyPositions[i + 2] = tmp[2];
+    }
+
+    // last index (23) + 1 = 24
+    const indices = [
+        ...cube.indices,
+        ...cube.indices.map((i) => 24 + i),
+        ...cube.indices.map((i) => 48 + i),
+        ...cube.indices.map((i) => 72 + i),
+    ];
+
+    return {
+        positions: new Float32Array([...headPositions, ...bodyPositions, ...leftArmPositions, ...rightArmPositions]),
+        normals: new Float32Array([...cube.normals, ...cube.normals, ...cube.normals, ...cube.normals]),
+        indices: new Uint32Array(indices),
+        indicesLength: indices.length,
+    };
+};
+
+const cubeMesh = {
+    positions: new Float32Array(cube.positions),
+    normals: new Float32Array(cube.normals),
+    indices: new Uint32Array(cube.indices),
+    indicesLength: cube.indicesLength,
+};
+
+const playerMesh = createPlayerGeometry();
+
 export const createRenderSystem = (world: World): System => {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     canvas.width = window.innerWidth;
@@ -129,13 +242,13 @@ export const createRenderSystem = (world: World): System => {
 
         const vao = createWebgl2VertexArray(gl);
 
-        const positionsBuffer = createWebgl2ArrayBuffer(gl, cube.positions);
+        const positionsBuffer = createWebgl2ArrayBuffer(gl, cubeMesh.positions);
         setupWebgl2VertexAttribPointer(gl, 0, 3);
 
-        const normalsBuffer = createWebgl2ArrayBuffer(gl, cube.normals);
+        const normalsBuffer = createWebgl2ArrayBuffer(gl, cubeMesh.normals);
         setupWebgl2VertexAttribPointer(gl, 1, 3);
 
-        const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
+        const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cubeMesh.indices);
 
         const update = () => {
             if (tileComponent.tile === EMPTY_TILE) return;
@@ -145,7 +258,7 @@ export const createRenderSystem = (world: World): System => {
                 .update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
-            gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
+            gl.drawElements(gl.TRIANGLES, cubeMesh.indicesLength, gl.UNSIGNED_INT, 0);
         };
 
         const cleanup = () => {
@@ -184,19 +297,19 @@ export const createRenderSystem = (world: World): System => {
 
         const vao = createWebgl2VertexArray(gl);
 
-        const positionsBuffer = createWebgl2ArrayBuffer(gl, cube.positions);
+        const positionsBuffer = createWebgl2ArrayBuffer(gl, playerMesh.positions);
         setupWebgl2VertexAttribPointer(gl, 0, 3);
 
-        const normalsBuffer = createWebgl2ArrayBuffer(gl, cube.normals);
+        const normalsBuffer = createWebgl2ArrayBuffer(gl, playerMesh.normals);
         setupWebgl2VertexAttribPointer(gl, 1, 3);
 
-        const indicesBuffer = createWebgl2ElementArrayBuffer(gl, cube.indices);
+        const indicesBuffer = createWebgl2ElementArrayBuffer(gl, playerMesh.indices);
 
         const update = () => {
             entityUbo.setMat4('t.mm', transformComponent.modelMatrix).setVec3('m.color', playerColor).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
-            gl.drawElements(gl.TRIANGLES, cube.indicesLength, gl.UNSIGNED_INT, 0);
+            gl.drawElements(gl.TRIANGLES, playerMesh.indicesLength, gl.UNSIGNED_INT, 0);
         };
 
         const cleanup = () => {

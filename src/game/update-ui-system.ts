@@ -71,7 +71,7 @@ const showDiedDialog = (world: World, level: number, deaths: number) => {
                 </h1>
                 <p>You reached level: ${level} ${uiText}</p>
                 <div>
-                    <button id="new">Try this level again</button>
+                    <button id="new">Continue</button>
                     <a id="twitter" href="${getTwitterUrl(text)}" target="_blank">Tweet it</a>
                 </div>
             </form>

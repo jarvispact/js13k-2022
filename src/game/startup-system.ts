@@ -47,11 +47,11 @@ export const startupSystem: StartupSystem<World> = (world) => {
                                     player: { x, z },
                                     transform: {
                                         position: vec3.fromValues(mapX(x) * 2.35, 20, mapZ(z) * 2.35),
-                                        scale: vec3.fromValues(0.3, 0.8, 0.3),
+                                        scale: vec3.fromValues(1, 1, 1),
                                     },
                                     targetTransform: {
                                         position: vec3.fromValues(mapX(x) * 2.35, 1.2, mapZ(z) * 2.35),
-                                        scale: vec3.fromValues(0.3, 0.8, 0.3),
+                                        scale: vec3.fromValues(1, 1, 1),
                                         easing: { function: 'easeOutQuart', time: 0, increment: 0.1 },
                                     },
                                 }),

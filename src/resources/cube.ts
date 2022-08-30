@@ -86,8 +86,8 @@ const indices = [
 ];
 
 export const cube = {
-    positions: new Float32Array(positions),
-    normals: new Float32Array(normals),
-    indices: new Uint32Array(indices),
+    positions,
+    normals,
+    indices,
     indicesLength: indices.length,
 }
