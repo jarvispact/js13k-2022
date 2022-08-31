@@ -86,11 +86,15 @@ const handleNewTile = (direction: Key, playerEntity: PlayerEntity, level: Level,
         const tileTarget = tileEntity.getComponent('TargetTransform');
         sleep(150).then(async () => {
             moveTargetWithAnimation(tileTarget, 1, -20, 0.1);
-
             await sleep(150);
-
             moveTargetWithAnimation(playerTarget, 1, -20, 0.1);
-            world.dispatch({ type: 'DIE' });
+            world.dispatch({
+                type: 'DIE',
+                deadlyTile: {
+                    level: world.getState().currentLevel,
+                    position: { x: playerComponent.data.x, z: playerComponent.data.z },
+                },
+            });
         });
     } else if (newTile === SAFE_TILE) {
         SoundPlayer.play(moveSound);

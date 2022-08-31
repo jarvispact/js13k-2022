@@ -1,6 +1,6 @@
 import { StartupSystem } from '../ecs/system';
 import { has } from '../ecs/world';
-import { levels, PLAYER_TILE } from '../resources/levels';
+import { EMPTY_TILE, levels, PLAYER_TILE } from '../resources/levels';
 import { createMap } from '../utils/create-map';
 import { sleep } from '../utils/sleep';
 import { TileType } from './components';
@@ -59,7 +59,12 @@ export const levelSystem: StartupSystem<World> = (world) => {
 
                         tileComponent.data.x = x;
                         tileComponent.data.z = z;
-                        tileComponent.data.tile = tile;
+
+                        tileComponent.data.tile = newState.discoveredDeadlyTilesPerLevel[newState.currentLevel]?.find(
+                            (pos) => pos.x === x && pos.z === z,
+                        )
+                            ? EMPTY_TILE
+                            : tile;
 
                         tileTarget.data.position[0] = mapX(x) * 2.35;
                         tileTarget.data.position[2] = mapZ(z) * 2.35;
