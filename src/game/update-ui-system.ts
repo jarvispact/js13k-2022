@@ -21,7 +21,8 @@ const showStartDialog = (world: World) => {
                 <h1>
                     The hidden Death
                 </h1>
-                <p>Move with the arrow keys and try to reach the marked tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void. Good luck!</p>
+                <p>Move with the arrow keys and try to reach the green tile. But beware! Some tiles are not solid and if you stand on them, you will fall into the void.</p>
+                <p>A little hint: Within the same level, the tiles dont change. Good luck!</p>
                 <div id="settings">
                     <input id="sound" type="checkbox" checked />
                     <label>Sound</label>
