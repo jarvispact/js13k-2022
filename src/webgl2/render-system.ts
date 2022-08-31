@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { System } from '../ecs/system';
 import { has } from '../ecs/world';
 import { TileType } from '../game/components';
@@ -24,7 +24,7 @@ layout(location = 1) in vec3 normal;
 struct C { mat4 vm; mat4 pm; };
 uniform SU { C c; };
 struct T { mat4 mm; };
-struct M { vec3 color; };
+struct M { vec4 color; };
 uniform EU { T t; M m; };
 out vec3 vN;
 void main() {
@@ -38,17 +38,17 @@ const fs = `
 #version 300 es
 precision highp float;
 struct T { mat4 mm; };
-struct M { vec3 color; };
+struct M { vec4 color; };
 uniform EU { T t; M m; };
 in vec3 vN;
 vec3 lightDiffuse = vec3(0.8, 0.8, 0.8);
 out vec4 outColor;
 void main() {
-    vec3 ambient = m.color * 0.05;
+    vec3 ambient = m.color.rgb * 0.05;
     vec3 direction = normalize(vec3(0.5, 1.0, 3.0));
     vec3 normal = normalize(vN);
     float diff = max(dot(normal, direction), 0.0);
-    vec3 diffuse = lightDiffuse * diff * m.color;
+    vec3 diffuse = lightDiffuse * m.color.a * diff * m.color.rgb;
     outColor = vec4(ambient + diffuse, 1.0);
 }
 `.trim();
@@ -60,7 +60,7 @@ const sceneUboConfig = {
 
 const entityUboConfig = {
     't.mm': mat4.create(),
-    'm.color': vec3.create(),
+    'm.color': vec4.create(),
 };
 
 type CacheEntry<T> = { entity: T; update: () => void; cleanup: () => void };
@@ -223,14 +223,14 @@ export const createRenderSystem = (world: World): System => {
     const tileRenderCache: CacheEntry<TileEntity>[] = [];
     const cachedTileEntityMap: Record<string, number> = {};
 
-    const playerColor = vec3.fromValues(0, 0, 1);
+    const playerColor = vec4.fromValues(0.31, 0.27, 0.89, 0.8);
 
-    const colorForCell: { [K in Tile]: vec3 } = {
-        '0': vec3.fromValues(1, 1, 1),
-        '1': vec3.fromValues(1, 1, 1),
-        '2': vec3.fromValues(1, 1, 1),
-        '3': vec3.fromValues(0, 1, 0),
-        '4': vec3.fromValues(1, 1, 1),
+    const colorForCell: { [K in Tile]: vec4 } = {
+        '0': vec4.fromValues(1, 1, 1, 0.3),
+        '1': vec4.fromValues(1, 1, 1, 0.3),
+        '2': vec4.fromValues(1, 1, 1, 0.3),
+        '3': vec4.fromValues(0, 1, 0, 0.8),
+        '4': vec4.fromValues(1, 1, 1, 0.3),
     };
 
     const cacheTileEntity = (entity: TileEntity): CacheEntry<TileEntity> => {
@@ -254,7 +254,7 @@ export const createRenderSystem = (world: World): System => {
             if (tileComponent.tile === EMPTY_TILE) return;
             entityUbo
                 .setMat4('t.mm', transformComponent.modelMatrix)
-                .setVec3('m.color', colorForCell[tileComponent.tile])
+                .setVec4('m.color', colorForCell[tileComponent.tile])
                 .update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
@@ -306,7 +306,7 @@ export const createRenderSystem = (world: World): System => {
         const indicesBuffer = createWebgl2ElementArrayBuffer(gl, playerMesh.indices);
 
         const update = () => {
-            entityUbo.setMat4('t.mm', transformComponent.modelMatrix).setVec3('m.color', playerColor).update();
+            entityUbo.setMat4('t.mm', transformComponent.modelMatrix).setVec4('m.color', playerColor).update();
             gl.bindVertexArray(vao);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
             gl.drawElements(gl.TRIANGLES, playerMesh.indicesLength, gl.UNSIGNED_INT, 0);
