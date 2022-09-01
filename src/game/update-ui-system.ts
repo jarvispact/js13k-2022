@@ -90,7 +90,12 @@ const showDiedDialog = (world: World, level: number, deaths: number) => {
     }, 50);
 
     btn.onclick = () => {
-        world.dispatch({ type: 'RUN_RE_START_ANIMATION', level, deaths });
+        world.dispatch({
+            type: 'RUN_RE_START_ANIMATION',
+            level,
+            deaths,
+            discoveredDeadlyTilesPerLevel: world.getState().discoveredDeadlyTilesPerLevel,
+        });
         gameMenu.close();
     };
 };
@@ -133,7 +138,7 @@ const showGameCompletedDialog = (world: World, deaths: number) => {
 
     const btn = document.getElementById('new') as HTMLButtonElement;
     btn.onclick = () => {
-        world.dispatch({ type: 'RUN_RE_START_ANIMATION', level: 0, deaths: 0 });
+        world.dispatch({ type: 'RUN_RE_START_ANIMATION', level: 0, deaths: 0, discoveredDeadlyTilesPerLevel: {} });
         gameMenu.close();
     };
 };

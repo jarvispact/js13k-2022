@@ -19,7 +19,12 @@ export type WorldAction =
     | { type: 'RUN_LEVEL_UP_ANIMATION' }
     | { type: 'LEVEL_UP' }
     | { type: 'COMPLETE' }
-    | { type: 'RUN_RE_START_ANIMATION'; level: number; deaths: number }
+    | {
+          type: 'RUN_RE_START_ANIMATION';
+          level: number;
+          deaths: number;
+          discoveredDeadlyTilesPerLevel: Record<number, { x: number; z: number }[]>;
+      }
     | { type: 'RE_START' };
 
 export const world = new EcsWorld<WorldState, WorldAction>({
@@ -70,7 +75,13 @@ export const world = new EcsWorld<WorldState, WorldAction>({
             case 'COMPLETE':
                 return { ...state, status: 'completed' };
             case 'RUN_RE_START_ANIMATION':
-                return { ...state, status: 'animating', currentLevel: action.level, deathCounter: action.deaths };
+                return {
+                    ...state,
+                    status: 'animating',
+                    currentLevel: action.level,
+                    deathCounter: action.deaths,
+                    discoveredDeadlyTilesPerLevel: action.discoveredDeadlyTilesPerLevel,
+                };
             case 'RE_START':
                 return { ...state, status: 'running' };
             default:
